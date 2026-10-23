@@ -49,10 +49,18 @@ def run_checks(table: pd.DataFrame, per_day: list[dict], expected_days: int) -> 
     add("boardings_conserved", worst <= CONSERVATION_TOL,
         f"largest relative difference between raw and aggregated boardings: {worst:.2e}")
 
+    # Raw SUNT values can (rarely) be negative inside malformed trips; that is
+    # reported. The modelling table itself must never contain negatives.
     neg_raw = sum(d["negative_values"] for d in per_day)
     neg_out = int((table[["boardings", "alightings", "load_max", "load_trip_peak_mean"]] < 0).to_numpy().sum())
-    add("no_negative_values", neg_raw == 0 and neg_out == 0,
-        f"{neg_raw} negative raw values, {neg_out} negative aggregated values")
+    add("no_negative_aggregated_values", neg_out == 0,
+        f"{neg_out} negative aggregated values ({neg_raw} negative raw stop-event values)")
+
+    bad_trips = sum(d["trips_with_repeated_stop_sequence"] for d in per_day)
+    all_trips = sum(d["trips"] for d in per_day)
+    add("malformed_trips_rare", bad_trips <= 1e-3 * all_trips,
+        f"{bad_trips} of {all_trips} trips ({bad_trips / max(1, all_trips):.3%}) repeat a stop "
+        f"sequence number; limit 0.1%")
 
     lost = sum(d["boardings_outside_window"] for d in per_day)
     total = sum(d["boardings_raw"] for d in per_day) + lost
@@ -91,6 +99,9 @@ def build(raw_dir: Path = config.RAW_DIR, out_dir: Path = config.PROCESSED_DIR) 
             "route_directions": int(table[["route", "direction"]].drop_duplicates().shape[0]),
             "boardings_total": float(table["boardings"].sum()),
             "burst_events_total": int(sum(d["burst_events"] for d in per_day)),
+            "trips_total": int(sum(d["trips"] for d in per_day)),
+            "trips_with_repeated_stop_sequence": int(sum(d["trips_with_repeated_stop_sequence"]
+                                                         for d in per_day)),
             "max_load": float(np.nanmax(table["load_max"].to_numpy())),
             "route_hours_with_missing_load": int(table["load_max"].isna().sum()),
         },

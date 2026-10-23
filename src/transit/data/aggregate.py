@@ -27,7 +27,7 @@ import pandas as pd
 
 KEYS = ["route", "direction", "ts_hour"]
 
-RAW_COLUMNS = ["route_short_name", "direction_id", "trip_id", "stop_time",
+RAW_COLUMNS = ["route_short_name", "direction_id", "trip_id", "pt_sequence", "stop_time",
                "n-boardings", "n-alighting", "loading"]
 
 # Stop events with more boardings than this are counted as possible burst
@@ -82,6 +82,11 @@ def aggregate_day(df: pd.DataFrame, service_date: date) -> tuple[pd.DataFrame, d
     agg.insert(0, "service_date", start)
 
     raw_in_window = float(d["n_boardings"].sum())
+    # A well-formed trip visits each stop sequence number once. A few SUNT trips
+    # repeat sequence numbers with different timestamps, which breaks the load
+    # chain (one case even has a negative alighting). They are counted here.
+    seq_counts = df.groupby(["trip_id", "pt_sequence"], sort=False).size()
+    repeated_trips = seq_counts[seq_counts > 1].index.get_level_values("trip_id").unique()
     stats = {
         "date": service_date.isoformat(),
         "rows_in": int(len(df)),
@@ -94,6 +99,7 @@ def aggregate_day(df: pd.DataFrame, service_date: date) -> tuple[pd.DataFrame, d
         "negative_values": int((d[["n_boardings", "n_alighting", "loading"]] < 0).to_numpy().sum()),
         "routes": int(d["route"].nunique()),
         "trips": int(d["trip_id"].nunique()),
+        "trips_with_repeated_stop_sequence": int(len(repeated_trips)),
         "rows_out": int(len(agg)),
         "boardings_raw": raw_in_window,
         "boardings_aggregated": float(agg["boardings"].sum()),

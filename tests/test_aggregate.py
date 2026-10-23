@@ -20,6 +20,7 @@ def events(rows):
     cols = ["route", "direction", "trip_id", "stop_time", "n_boardings", "n_alighting", "loading"]
     df = pd.DataFrame(rows, columns=cols)
     df["stop_time"] = pd.to_datetime(df["stop_time"])
+    df["pt_sequence"] = df.groupby("trip_id").cumcount() + 1
     for c in ["n_boardings", "n_alighting", "loading"]:
         df[c] = df[c].astype("float64")
     return df
@@ -93,9 +94,24 @@ def test_burst_events_are_counted_not_removed(two_trips):
     assert row(agg, "300", "09").boardings == BURST_BOARDINGS + 50
 
 
+def test_trips_with_repeated_stop_sequence_are_counted(two_trips):
+    two_trips.loc[1, "pt_sequence"] = 1  # trip A now visits sequence 1 twice
+    _, stats = aggregate_day(two_trips, DAY)
+    assert stats["trips_with_repeated_stop_sequence"] == 1
+
+
+def test_negative_raw_value_is_reported_but_does_not_fail_if_aggregate_ok(two_trips):
+    two_trips.loc[2, "n_alighting"] = -1  # trip A hour 07 alightings: 1 - 1 = 0
+    agg, stats = aggregate_day(two_trips, DAY)
+    checks = run_checks(agg, [stats], expected_days=1)
+    assert stats["negative_values"] == 1
+    assert checks["no_negative_aggregated_values"]["passed"]
+    assert "1 negative raw" in checks["no_negative_aggregated_values"]["detail"]
+
+
 def test_load_day_renames_hyphenated_sunt_columns(tmp_path):
     raw = pd.DataFrame({
-        "route_short_name": ["100"], "direction_id": ["I"], "trip_id": ["A"],
+        "route_short_name": ["100"], "direction_id": ["I"], "trip_id": ["A"], "pt_sequence": [1],
         "stop_time": ["2024-03-05 07:01:00"], "n-boardings": [1.0], "n-alighting": [0.0],
         "loading": [1.0], "vehicle": ["v1"],
     })
