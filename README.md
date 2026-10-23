@@ -8,13 +8,13 @@ The system analyses public-transport data to forecast passenger demand and estim
 
 ## Team
 
-| Member | Roll number | Module |
-| --- | --- | --- |
-| Jay Pravin Vaghela (lead) | 24BCS104 | Architecture, demand model, integration |
-| Akshar Jasoliya | 24BCS101 | Data pipeline |
-| Tirth Jasoliya | 24BCS102 | Occupancy model and evaluation |
-| Disha Khushalani | 24BCS076 | Streamlit app |
-| Shivani Mahour | 24BME054 | Presentation and documentation |
+| Member | Module |
+| --- | --- |
+| Jay Pravin Vaghela (lead) | Architecture, demand model, integration |
+| Akshar Jasoliya | Data pipeline |
+| Tirth Jasoliya | Occupancy model and evaluation |
+| Disha Khushalani | Streamlit app |
+| Shivani Mahour | Presentation and documentation |
 
 Module owners are a proposal and may change; see [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md).
 

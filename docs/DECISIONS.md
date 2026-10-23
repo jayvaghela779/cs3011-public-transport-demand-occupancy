@@ -2,6 +2,24 @@
 
 Newest first. Each entry records what was decided, why, and what it rules out.
 
+## D9. Malformed trips (24 Oct 2026)
+
+- **Finding:** 222 SUNT trips repeat stop sequence numbers with different stop IDs and timestamps. All are on 2 and 3 April 2024, on three route-directions (1235 I, 1246 V, 1383 V). Every trip of those route-directions on those days is malformed, and they appear on no other day. They cover 116 route-hours (0.021%) and 5,555 boardings (0.011%). One of them holds the only negative inferred alighting in the data.
+- **Decision:** keep them in the route-hour table, flagged by `n_malformed_trips`. Their estimated loads are unreliable, so `load_reliable` is False in those route-hours and they are never load targets. In practice they are also out of scope, because those route-directions have only 2 days of history (below the 10-day minimum).
+- **Effect on targets:** boardings negligible (at most 330 boardings could be double-counted); estimated load in those 116 route-hours unusable; no validation or test rows are affected.
+
+## D8. Absent route-hours are missing, not zero (24 Oct 2026)
+
+- **Problem:** the route-hour table only has a row when SUNT recorded a stop event. An absent hour can mean "no bus scheduled" or "a bus ran but SUNT has no record". SUNT's timetable (GTFS) covers 21 May to 21 Jun 2024, not our study period, so it cannot separate the two.
+- **Decision:**
+    1. Observed rows are targets, including the 22,674 rows (4.2%) with zero boardings: a bus was recorded and no card was tapped.
+    2. Each route, direction, day type and service hour gets a profile from **training days only**. A cell is *regular* if observed on at least 80% of training days of that day type.
+    3. An absent hour in a regular cell is a **missing record**: excluded from targets and metrics, and NaN in features. It is never filled with zero.
+    4. Absent hours in non-regular cells are treated as no regular service and are not predicted.
+    5. Route-directions observed on fewer than 10 training days are out of scope (38 of 713, 1,160 rows).
+- **Why:** zero-filling would turn likely data gaps into fake zero demand and pad the test set with easy zeros. The forecast is therefore "boardings in this hour, given that the route runs", which matches how an operator with a timetable would use it.
+- **Implementation:** `src/transit/data/service.py`, tested in `tests/test_service.py`.
+
 ## D7. Aggregation unit and hour definition (24 Oct 2026)
 
 - **Decision:** the modelling table has one row per route (`route_short_name`), direction (`I` or `V`) and clock hour of `stop_time`. A service day's file runs from about 03:45 to about 02:15 the next morning, so the clock hour, not the service date, is the time key.
