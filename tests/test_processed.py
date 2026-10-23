@@ -52,3 +52,33 @@ def test_no_negative_values(table):
 def test_trip_peak_mean_never_exceeds_hour_max(table):
     t = table.dropna(subset=["load_max", "load_trip_peak_mean"])
     assert (t["load_trip_peak_mean"] <= t["load_max"] + 1e-9).all()
+
+
+# Regression pins: the committed table must reproduce these figures from the
+# first verified build (24 Oct 2026). If a code change moves them, the change
+# must be explained in docs/DECISIONS.md and these numbers updated on purpose.
+EXPECTED = {
+    "route_hour_rows": 541_611,
+    "routes": 410,
+    "route_directions": 713,
+    "boardings_total": 51_353_180.0,
+    "stop_events_in": 37_600_997,
+    "trips_with_repeated_stop_sequence": 222,
+    "route_hours_with_malformed_trips": 116,
+    "burst_events_total": 2_685,
+}
+
+
+@pytest.mark.parametrize("key", list(EXPECTED))
+def test_summary_matches_pinned_regression_values(report, key):
+    got = report["summary"][key]
+    if isinstance(EXPECTED[key], float):
+        assert got == pytest.approx(EXPECTED[key], abs=1.0)
+    else:
+        assert got == EXPECTED[key]
+
+
+def test_malformed_route_hours_are_flagged_in_table(table):
+    assert int((table["n_malformed_trips"] > 0).sum()) == EXPECTED["route_hours_with_malformed_trips"]
+    bad = table[table["n_malformed_trips"] > 0]
+    assert set(bad["service_date"].dt.strftime("%Y-%m-%d")) == {"2024-04-02", "2024-04-03"}

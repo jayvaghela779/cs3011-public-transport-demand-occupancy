@@ -18,7 +18,6 @@ import json
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from transit import __version__, config
@@ -70,8 +69,10 @@ def run_checks(table: pd.DataFrame, per_day: list[dict], expected_days: int) -> 
     return checks
 
 
-def build(raw_dir: Path = config.RAW_DIR, out_dir: Path = config.PROCESSED_DIR) -> tuple[pd.DataFrame, dict]:
-    days = study_dates()
+def build(raw_dir: Path = config.RAW_DIR, out_dir: Path = config.PROCESSED_DIR,
+          days: list | None = None) -> tuple[pd.DataFrame, dict]:
+    """Build the table for `days` (default: the 59-day study period)."""
+    days = study_dates() if days is None else list(days)
     tables, per_day = [], []
     for i, day in enumerate(days, 1):
         path = raw_dir / od_filename(day)
@@ -102,7 +103,8 @@ def build(raw_dir: Path = config.RAW_DIR, out_dir: Path = config.PROCESSED_DIR) 
             "trips_total": int(sum(d["trips"] for d in per_day)),
             "trips_with_repeated_stop_sequence": int(sum(d["trips_with_repeated_stop_sequence"]
                                                          for d in per_day)),
-            "max_load": float(np.nanmax(table["load_max"].to_numpy())),
+            "route_hours_with_malformed_trips": int((table["n_malformed_trips"] > 0).sum()),
+            "max_load": float(table["load_max"].max()),
             "route_hours_with_missing_load": int(table["load_max"].isna().sum()),
         },
         "checks": checks,

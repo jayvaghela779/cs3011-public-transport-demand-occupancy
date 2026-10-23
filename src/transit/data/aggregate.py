@@ -13,6 +13,8 @@ Output (one row per route, direction and clock hour of stop_time):
     load_trip_peak_mean  mean over trips of each trip's highest estimated load
                          within the hour ("a typical bus's peak load")
     n_burst_events       stop events with more than BURST_BOARDINGS boardings
+    n_malformed_trips    trips in the hour that repeat a stop sequence number;
+                         their estimated loads are unreliable (decision D9)
 
 Loads are SUNT's estimates from fare-card trip chaining, not measured occupancy.
 """
@@ -22,7 +24,6 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 KEYS = ["route", "direction", "ts_hour"]
@@ -58,6 +59,17 @@ def load_day(path: Path) -> pd.DataFrame:
     return df
 
 
+def malformed_trip_ids(df: pd.DataFrame) -> pd.Index:
+    """Trips that visit the same stop sequence number more than once.
+
+    A well-formed trip visits each sequence number once. In SUNT, 222 trips
+    (all on 2-3 April 2024, three route-directions) repeat sequence numbers
+    with different stop IDs and timestamps, which breaks the load chain.
+    """
+    seq_counts = df.groupby(["trip_id", "pt_sequence"], sort=False).size()
+    return seq_counts[seq_counts > 1].index.get_level_values("trip_id").unique()
+
+
 def aggregate_day(df: pd.DataFrame, service_date: date) -> tuple[pd.DataFrame, dict]:
     """Aggregate one service day. Returns the table and per-day quality stats."""
     start = pd.Timestamp(service_date)
@@ -66,6 +78,7 @@ def aggregate_day(df: pd.DataFrame, service_date: date) -> tuple[pd.DataFrame, d
     d = df[in_window].copy()
     d["ts_hour"] = d["stop_time"].dt.floor("h")
     d["is_burst"] = (d["n_boardings"] > BURST_BOARDINGS).astype("int64")
+    repeated_trips = malformed_trip_ids(df)
 
     g = d.groupby(KEYS, sort=True)
     agg = pd.DataFrame({
@@ -78,15 +91,13 @@ def aggregate_day(df: pd.DataFrame, service_date: date) -> tuple[pd.DataFrame, d
     })
     trip_peak = d.groupby(KEYS + ["trip_id"], sort=True)["loading"].max()
     agg["load_trip_peak_mean"] = trip_peak.groupby(level=KEYS).mean()
+    bad = d[d["trip_id"].isin(repeated_trips)]
+    agg["n_malformed_trips"] = (bad.groupby(KEYS)["trip_id"].nunique()
+                                .reindex(agg.index, fill_value=0).astype("int64"))
     agg = agg.reset_index()
     agg.insert(0, "service_date", start)
 
     raw_in_window = float(d["n_boardings"].sum())
-    # A well-formed trip visits each stop sequence number once. A few SUNT trips
-    # repeat sequence numbers with different timestamps, which breaks the load
-    # chain (one case even has a negative alighting). They are counted here.
-    seq_counts = df.groupby(["trip_id", "pt_sequence"], sort=False).size()
-    repeated_trips = seq_counts[seq_counts > 1].index.get_level_values("trip_id").unique()
     stats = {
         "date": service_date.isoformat(),
         "rows_in": int(len(df)),
@@ -100,11 +111,12 @@ def aggregate_day(df: pd.DataFrame, service_date: date) -> tuple[pd.DataFrame, d
         "routes": int(d["route"].nunique()),
         "trips": int(d["trip_id"].nunique()),
         "trips_with_repeated_stop_sequence": int(len(repeated_trips)),
+        "route_hours_with_malformed_trips": int((agg["n_malformed_trips"] > 0).sum()),
         "rows_out": int(len(agg)),
         "boardings_raw": raw_in_window,
         "boardings_aggregated": float(agg["boardings"].sum()),
         "burst_events": int((d["n_boardings"] > BURST_BOARDINGS).sum()),
-        "max_load": float(np.nanmax(d["loading"].to_numpy())) if len(d) else float("nan"),
+        "max_load": float(d["loading"].max()) if d["loading"].notna().any() else float("nan"),
         "first_stop_time": str(d["stop_time"].min()),
         "last_stop_time": str(d["stop_time"].max()),
     }
