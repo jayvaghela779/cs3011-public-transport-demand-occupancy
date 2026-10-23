@@ -2,6 +2,17 @@
 
 Newest first. Each entry records what was decided, why, and what it rules out.
 
+## D11. Burst validations are kept, not capped (24 Oct 2026)
+
+- **Finding:** the 2,685 stop events with more than 100 boardings are 99.8% at 10 stops, all at the first stop of a trip, mostly 06:00–08:00 and 17:00–18:00. The top stops are terminals and stations (Lapa, Pirajá, Acesso Norte). This fits station turnstile validations being attributed to the departing bus, so they look like real crowds, possibly over-attributed to one vehicle.
+- **Decision:** keep them; flag route-hours with `n_burst_events`; report load metrics with and without burst hours. No capping.
+
+## D10. Capacity assumption for crowding levels (24 Oct 2026)
+
+- **Decision:** capacities are the minimum seated-plus-standing figures in ABNT NBR 15570:2009 (Table 1; 6 standing passengers per m², Table 2): midiônibus 40, ônibus básico 70 (base case), padron 80, articulado 100. Levels use load factor = estimated load / capacity: low < 0.5, medium 0.5–0.8, high ≥ 0.8.
+- **Why:** SUNT has no vehicle capacity, and the fleet mix per route is unknown. Results are reported for all four scenarios.
+- **Base-case class shares (observed, load-reliable route-hours):** low 77.8%, medium 17.4%, high 4.8%.
+
 ## D9. Malformed trips (24 Oct 2026)
 
 - **Finding:** 222 SUNT trips repeat stop sequence numbers with different stop IDs and timestamps. All are on 2 and 3 April 2024, on three route-directions (1235 I, 1246 V, 1383 V). Every trip of those route-directions on those days is malformed, and they appear on no other day. They cover 116 route-hours (0.021%) and 5,555 boardings (0.011%). One of them holds the only negative inferred alighting in the data.

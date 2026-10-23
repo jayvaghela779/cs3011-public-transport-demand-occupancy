@@ -70,6 +70,27 @@ The Victoria train-count dataset is a stretch goal only if the core is finished 
 - [ ] Slides, viva sheet, demo video
 - [ ] Rehearsals
 
+## Progress notes and continuation checklist (24 Oct 2026, 05:15 IST)
+
+Work stopped at a safe checkpoint so usage is preserved. Nothing below has been evaluated on the test weeks yet.
+
+**Done**
+- PR #1 merged (data pipeline, D8 service profile, D9 malformed-trip flag, 50 tests, GitHub Actions on Python 3.11 and 3.12 passing).
+- Branch `feature/models` (work in progress, not merged): leak-free day-ahead features, three baselines, LightGBM training with validation tuning, metrics, crowding levels (D10), results-report generator and a Streamlit app. 58 tests pass, including a test that features for day D are unchanged when data on or after D is altered.
+- One partial training run (stopped before finishing). Validation-week results only, for orientation:
+    - Demand: best LightGBM (L1 objective, 63 leaves) validation WAPE 18.84%. Ablation: calendar + route only 21.64%; adding same-hour history 18.89%; all features 18.84%.
+    - Estimated load: best so far (L1, 63 leaves) validation WAPE 19.54%.
+    - Baselines on validation and all test metrics: not yet computed.
+
+**Next steps, in order**
+1. `python -m transit.models.run` (about 25 min on 2 CPUs). It writes `reports/metrics.json`, `reports/tuning_*.csv` and `data/predictions/*.parquet`. This is the first and only test-set scoring.
+2. `python -m transit.report` to write `reports/RESULTS.md` and the figures. It stops with an error if the metrics do not match the prediction files.
+3. `streamlit run app/streamlit_app.py`. Check every page loads; it has not been run yet. Add a `streamlit.testing` smoke test.
+4. Commit the results, open a PR for `feature/models`, wait for CI, and merge.
+5. Deploy on Streamlit Community Cloud (Jay signs in with GitHub at share.streamlit.io; main file `app/streamlit_app.py`). Local fallback: `streamlit run app/streamlit_app.py`.
+6. README results section, architecture diagram, slides, viva sheet (from the relevant lecture PDFs), backup demo video.
+7. Quality-review loop (score out of 20, up to 5 iterations).
+
 ## Open questions for the TA
 
 These are unresolved. Work continues meanwhile, and nothing in the presentation will claim more than the data supports.
