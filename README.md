@@ -4,17 +4,17 @@ CS3011 Artificial Intelligence course project, PDPM IIITDM Jabalpur. Group 52.
 
 The system analyses public-transport data to forecast passenger demand and estimated on-board load (our occupancy target), so that service planning can respond to demand.
 
-> **Status (24 Oct 2026): work in progress.** The data pipeline is being built. No models or results exist yet. Every result reported later will be produced by a script committed in this repository.
+> **Status (24 Oct 2026): work in progress.** The data pipeline is built and its quality checks pass ([report](data/processed/quality_report.json)). No models or results exist yet. Every result reported later will be produced by a script committed in this repository.
 
 ## Team
 
-| Member | Roll number | Module |
-| --- | --- | --- |
-| Jay Pravin Vaghela (lead) | 24BCS104 | Architecture, demand model, integration |
-| Akshar Jasoliya | 24BCS101 | Data pipeline |
-| Tirth Jasoliya | 24BCS102 | Occupancy model and evaluation |
-| Disha Khushalani | 24BCS076 | Streamlit app |
-| Shivani Mahour | 24BME054 | Presentation and documentation |
+| Member | Module |
+| --- | --- |
+| Jay Pravin Vaghela (lead) | Architecture, demand model, integration |
+| Akshar Jasoliya | Data pipeline |
+| Tirth Jasoliya | Occupancy model and evaluation |
+| Disha Khushalani | Streamlit app |
+| Shivani Mahour | Presentation and documentation |
 
 Module owners are a proposal and may change; see [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md).
 
