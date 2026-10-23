@@ -46,9 +46,10 @@ def read_manifest(path: Path = config.MANIFEST_PATH) -> list[dict]:
     return rows
 
 
-def write_manifest(sunt_od_dir: Path, path: Path = config.MANIFEST_PATH) -> list[dict]:
+def write_manifest(sunt_od_dir: Path, path: Path = config.MANIFEST_PATH,
+                   days: list[date] | None = None) -> list[dict]:
     rows = []
-    for day in study_dates():
+    for day in (study_dates() if days is None else days):
         fp = sunt_od_dir / od_filename(day)
         if not fp.exists():
             raise FileNotFoundError(f"Missing SUNT file for {day}: {fp}")

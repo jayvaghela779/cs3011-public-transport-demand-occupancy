@@ -39,9 +39,10 @@ def fetch(url: str, dest: Path, retries: int = 3, timeout: int = 120) -> None:
             time.sleep(wait)
 
 
-def download_all(raw_dir: Path = config.RAW_DIR, limit: int | None = None) -> list[Path]:
+def download_all(raw_dir: Path = config.RAW_DIR, limit: int | None = None,
+                 manifest_path: Path = config.MANIFEST_PATH) -> list[Path]:
     raw_dir.mkdir(parents=True, exist_ok=True)
-    entries = read_manifest()
+    entries = read_manifest(manifest_path)
     if limit is not None:
         entries = entries[:limit]
     paths = []
