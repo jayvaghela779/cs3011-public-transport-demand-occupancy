@@ -58,8 +58,9 @@ The Victoria train-count dataset is a stretch goal only if the core is finished 
 - [x] Decision report reviewed and approved (24 Oct)
 - [x] SUNT licence confirmed on GitHub, Mendeley Data and Hugging Face (CC BY 4.0)
 - [x] Repository skeleton and documentation
-- [ ] Data pipeline: download, aggregation, quality report
-- [ ] Unit tests for the pipeline
+- [x] Data pipeline: download, aggregation, quality report (24 Oct; all 6 checks pass)
+- [x] Unit tests for the pipeline (18 tests, pandas 2.2 and 3.0)
+- [ ] Choose how to treat route-hours with no service (zero or missing) before modelling
 - [ ] Baselines
 - [ ] LightGBM demand model
 - [ ] Estimated-load model and capacity sensitivity
