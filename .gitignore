@@ -1,0 +1,35 @@
+# Raw data is downloaded by the pipeline, never committed
+data/raw/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Secrets and local config
+.env
+.env.*
+*.pem
+*.key
+.streamlit/secrets.toml
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Large or temporary outputs
+*.log
+tmp/
