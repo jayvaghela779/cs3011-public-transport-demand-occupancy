@@ -87,6 +87,10 @@ All six checks passed: unique keys, 59 of 59 days, boardings conserved exactly, 
 
 The highest load (469.6) is far above any plausible bus capacity. Loads like this come from burst validations and are why crowding levels need care in the occupancy module.
 
+### External plausibility check
+
+Salvador's mobility department reports that the conventional bus system (STCO) carried about 1.25 million passengers per day in 2024, down from almost 1.5 million in 2019 ([PEPI, Prefeitura de Salvador, 2025](https://mobilidade.salvador.ba.gov.br/wp-content/uploads/2025/10/PEPI-Plano-de-Envolvimento-das-Partes-Interessadas-Def_compressed.pdf)). SUNT's mean over the 40 ordinary weekdays in our period is 1,061,538 recorded boardings, about 85% of that figure. The gap is consistent with SUNT's documented exclusions: riders aged 65+ without cards, and validations that could not be matched to a trip. The published figure is rounded and its day basis is not stated, so this is a sanity check, not a reconciliation.
+
 ### Missing route-hours (decision D8)
 
 | Kind of route-hour | Count | Treatment |
