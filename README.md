@@ -83,6 +83,8 @@ streamlit run app/streamlit_app.py
 
 `requirements.txt` allows newer releases. If a future release ever changes the results, install the exact versions that reproduced them instead: `pip install -r requirements-lock.txt` (tested on Python 3.12).
 
+Step-by-step setup for team laptops (including Windows), the 3-minute demo script and troubleshooting are in [docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md).
+
 The dashboard reads only committed files, so `pip install -r requirements.txt` and `streamlit run app/streamlit_app.py` are enough for the demo. No download is needed, and it works offline.
 
 ## Deployment (free)
@@ -94,7 +96,8 @@ Raw files are cached in `data/raw/` and are never committed. To reproduce everyt
 ## Repository layout
 
 ```
-docs/                 plan, decisions (D1-D13), data card, architecture, viva preparation
+docs/                 plan, decisions (D1-D13), data card, architecture, viva question bank,
+                      team presentation guide, demo runbook, final readiness checklist
 data/manifest/        pinned list of SUNT source files with SHA-256 checksums
 data/raw/             downloaded SUNT files (git-ignored)
 data/processed/       route-hour table and quality report

@@ -5,7 +5,7 @@
 **Group:** 52
 **Evaluation:** Tuesday 3 November 2026, 6:00 PM (presentation plus fully functional running code)
 
-Last updated: 24 Oct 2026, 06:35 IST (AI-assisted session paused; see the continuation checklist at the end).
+Last updated: 24 Oct 2026, afternoon (final audit and team preparation; remaining actions are in [FINAL_READINESS_CHECKLIST.md](FINAL_READINESS_CHECKLIST.md)).
 
 ## Objective
 
@@ -93,6 +93,8 @@ These are unresolved. Work continues meanwhile, and nothing in the presentation 
 - [ ] May the demo run from a cloud URL, and will internet be available in the room?
 - [ ] Must we submit a GitHub link or code before the evaluation, and by when?
 - [ ] Is reusing open-source datasets and ideas, with citation, acceptable?
+- [ ] How long is the presentation, and how long the demo?
+- [ ] Our code was written with AI assistance (Claude), disclosed in every commit. Is that acceptable, and how should we declare it?
 
 ## Risks
 
@@ -106,7 +108,7 @@ These are unresolved. Work continues meanwhile, and nothing in the presentation 
 | Time leakage | Chronological split; tests that features use only data at least 24 h old |
 | Uneven contribution history | Feature branches; each member commits from their own account |
 
-## Continuation checklist (session paused 24 Oct 2026, morning)
+## Continuation notes (24 Oct 2026)
 
 Jay asked for the AI-assisted session to stop at 7:30 AM IST and wait for him. State at the pause:
 
@@ -115,14 +117,16 @@ Jay asked for the AI-assisted session to stop at 7:30 AM IST and wait for him. S
 - A fresh-clone rerun reproduced every committed result exactly ([record](ARCHITECTURE.md#reproduction-record)).
 - CI runs `pytest` and `python -m transit.verify` on Ubuntu (Python 3.11, 3.12) and Windows (Python 3.12, with both `requirements.txt` and `requirements-lock.txt`).
 
-**Next actions, in order**
-1. **Jay:** deploy on Streamlit Community Cloud (main file `app/streamlit_app.py`, branch `main`) and add the URL to the README. This needs his own GitHub sign-in.
-2. **Jay:** share the slide deck with the team and review it visually. Nobody has looked at the rendered slides yet.
-3. **Each member:** `pip install -r requirements.txt`, `pip install -e .`, `pytest`, `streamlit run app/streamlit_app.py` on your own laptop, and commit a small fix or note from your own account.
-4. **Akshar:** run `notebooks/reproduce_on_colab.ipynb` on Colab and post the `transit.verify` output in a GitHub issue.
-5. **Team decisions:** code licence (MIT proposed); whether to fix the night-time load interval gap (D13) or leave it as a stated limitation.
-6. **Jay (not done by the AI):** send the open TA questions above. Nobody has contacted the TA.
-7. Rehearse the demo with the local fallback ready; keep the 68-second backup video on the demo laptop.
+**Next actions:** superseded by [FINAL_READINESS_CHECKLIST.md](FINAL_READINESS_CHECKLIST.md), which gives each remaining action an owner, a prerequisite and the evidence that shows it is done.
+
+**Final audit (24 Oct 2026, afternoon).** No metric changed. Fixes:
+- `transit.verify` now explains, instead of crashing, when there is no git clone.
+- The README and the slides now state the AI assistance accurately.
+- The baseline comparison now states its limits: RMSE, per-day wins, the bootstrap's scope and the alert list.
+- The next-day caption now shows the historical average.
+- D12's description of the archived experiments was corrected.
+
+Team preparation material: [VIVA_QUESTION_BANK.md](VIVA_QUESTION_BANK.md), [TEAM_PRESENTATION_GUIDE.md](TEAM_PRESENTATION_GUIDE.md), [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md).
 
 **Not started, deliberately:** an "extra trips needed" figure (D5, optional), the Victoria stretch dataset, and any change that would score the test weeks again.
 
