@@ -506,7 +506,7 @@ python -m transit.data.build      # route-hour table, 6 quality checks
 python -m transit.models.run      # tune, evaluate, forecast (about 8 min)
 python -m transit.report          # RESULTS.md and figures
 python -m transit.verify          # compare with the committed results
-pytest                            # 86 tests
+pytest                            # 93 tests
 ```
 
 ## 9.2 Reproducibility (measured)
@@ -519,7 +519,7 @@ pytest                            # 86 tests
 
 ## 9.3 Testing (measured)
 
-There are 86 automated tests (pytest). GitHub Actions runs them, followed by `python -m transit.verify`, on Ubuntu (Python 3.11 and 3.12) and on Windows (Python 3.12, with both the normal and the locked requirement files). The tests use small hand-written fixtures in the SUNT file format, not observations, except where they check the committed outputs.
+There are 93 automated tests (pytest). GitHub Actions runs them, followed by `python -m transit.verify`, on Ubuntu (Python 3.11 and 3.12) and on Windows (Python 3.12, with both the normal and the locked requirement files). The tests use small hand-written fixtures in the SUNT file format, not observations, except where they check the committed outputs.
 
 | Area | Test file | Tests | What they check |
 | --- | --- | --- | --- |
@@ -533,8 +533,9 @@ There are 86 automated tests (pytest). GitHub Actions runs them, followed by `py
 | Model run | `test_models_run.py` | 6 | complete results, documented blend, weight chosen on validation, beats last week on a learnable pattern |
 | Dashboard and outputs | `test_app.py` | 15 | every page renders; reported metrics, coverage and alert precision match the prediction files; missing records never scored |
 | Verification | `test_verify.py` | 7 | the comparison logic of `transit.verify`, and a clear message when git is missing |
+| Public web build | `test_web.py` | 7 | the web page lists every module and data file the app reads; the site build copies them byte for byte with a SHA-256 manifest; versions are pinned; the app does not load scikit-learn |
 
-On 24 October 2026 the suite passed (86 passed) and `python -m transit.verify` matched all 2,326 values.
+On 24 October 2026 the suite passed (93 passed) and `python -m transit.verify` matched all 2,326 values.
 
 ## 9.4 Dashboard
 
@@ -550,7 +551,38 @@ The Streamlit dashboard (`app/streamlit_app.py`) reads only committed files, so 
 
 Changing the capacity on the explorer page does not re-run any model; it only moves the threshold lines and relabels the crowding strip. Every page is checked by an automated test that fails on any exception.
 
-**Deployment status:** the dashboard runs locally. It **has not been deployed** to Streamlit Community Cloud at the time of writing. If it is deployed before the evaluation, the deployment must be checked and this sentence updated.
+## 9.5 Public deployment (GitHub Pages)
+
+The same dashboard is public at **https://jayvaghela779.github.io/cs3011-public-transport-demand-occupancy/**. It is a static GitHub Pages site. The page (`web/index.html`) runs the unchanged `app/streamlit_app.py` inside the visitor's browser with stlite 1.12.0 (Streamlit 1.65 on Pyodide 314.0.3, that is, Python compiled to WebAssembly). This approach was chosen because:
+
+- there is no server that can sleep or fail;
+- no account is needed beyond the repository's own GitHub account;
+- the site updates itself from `main`.
+
+**How it is published.** A GitHub Actions workflow (`.github/workflows/pages.yml`) runs `web/build_site.py` whenever the app, its modules or the committed results change on `main`.
+
+- It copies the app code and result files to the `gh-pages` branch together with a SHA-256 manifest.
+- It also copies three pinned, hash-checked Python wheels (`web/wheels.txt`).
+
+**How it loads.** The page downloads every file through jsDelivr's mirror of that branch and checks each one against the manifest. It re-fetches any stale or failed copy from GitHub Pages itself. So the public site shows exactly the committed results, and no metric or prediction file is changed for it.
+
+**Checked on 24 October 2026 (measured).**
+
+- The published files are byte-identical to `main` (11 app and data files).
+- In a real browser on an Indian home connection, all five pages worked and showed the same values as the local app:
+  - route 137 I on 17 April: day WAPE 15.3% against 7.7%;
+  - next day: 9,566 route-hours, 481 of them high crowding;
+  - the in-browser recomputation matched all ten reported test WAPEs;
+  - no Python errors.
+
+**Load time (measured).** A first visit downloads about 85 MB: 27 MB of results and about 55 MB of Python runtime and packages.
+
+- A cold load took 83 s on a connection throttled to 10 Mbit/s, and 340 s (about 5 minutes 40 seconds) at 2 Mbit/s, the speed measured on the home network above.
+- Repeat visits use the browser cache and were ready in about 40 s.
+- On the tested home network, `raw.githubusercontent.com` and `files.pythonhosted.org` were throttled to almost nothing, and `github.io` was slow for large files. That is why the page downloads through jsDelivr and serves the three wheels itself.
+- Once, a runtime download stalled inside Pyodide's loader; the page now suggests a reload after two minutes without progress.
+
+For the evaluation the local app remains the primary demo: it starts instantly and needs no internet.
 
 # 10. Limitations
 
@@ -564,7 +596,7 @@ Changing the capacity on the explorer page does not re-run any model; it only mo
 8. **Test weeks scored twice.** Disclosed in section 5.4.
 9. **Night-time load intervals.** About 52% coverage instead of 80% (section 8.2).
 10. **Validation optimism.** Validation figures were used for selection and are optimistic; the test figures are the honest estimate.
-11. **Not deployed; limited cross-platform reruns.** The dashboard runs locally only; the full pipeline has been rerun on Linux but not yet on Windows or Colab.
+11. **Heavy public dashboard; limited cross-platform reruns.** The public dashboard downloads about 85 MB on a first visit and needs a recent browser. It runs Streamlit 1.65 on Pyodide rather than the local Streamlit 1.66, so small visual differences are possible. The full pipeline has been rerun on Linux but not yet on Windows or Colab.
 
 # 11. Ethical considerations
 
@@ -584,11 +616,11 @@ Changing the capacity on the explorer page does not re-run any model; it only mo
 - **Real capacity and counts:** vehicle assignments per trip, or automatic passenger counters, to replace the assumed capacity and to validate the estimated load.
 - **Other cities:** test the pipeline on another open dataset with real counts, ideally from an Indian city, before making any claim beyond Salvador.
 - **Planning outputs:** an "extra trips needed" estimate under a stated capacity assumption (D5), shown as illustrative only.
-- **Deployment:** host the dashboard on a free service and document how it was checked.
+- **Lighter public hosting:** a server-side host (for example Streamlit Community Cloud, which needs its own account sign-in) would cut the first-visit download for viewers on slow networks.
 
 # 13. Conclusion
 
-We built an end-to-end, reproducible system that forecasts day-ahead hourly boardings and estimated on-board load for every bus route-direction in Salvador, derives crowding levels under documented capacity assumptions, and presents the results in an offline dashboard. On two held-out weeks, the final forecast (an equal blend of LightGBM and a historical average) has a WAPE of 18.15% for demand and 19.20% for estimated load: about 23–24% better than the "same hour last week" rule, but only marginally better than a well-chosen historical average, and only in absolute error. Crowding levels for a standard bus reach a macro-F1 of 0.769, and a daily list of the 50 most crowded forecast hours is right 92.1% of the time.
+We built an end-to-end, reproducible system that forecasts day-ahead hourly boardings and estimated on-board load for every bus route-direction in Salvador, derives crowding levels under documented capacity assumptions, and presents the results in a dashboard that runs offline on a laptop and publicly in any recent browser. On two held-out weeks, the final forecast (an equal blend of LightGBM and a historical average) has a WAPE of 18.15% for demand and 19.20% for estimated load: about 23–24% better than the "same hour last week" rule, but only marginally better than a well-chosen historical average, and only in absolute error. Crowding levels for a standard bus reach a macro-F1 of 0.769, and a daily list of the 50 most crowded forecast hours is right 92.1% of the time.
 
 The most useful lesson is methodological. A strong, simple baseline captured almost all of the predictable structure, and only careful baselines, a validation-only selection protocol and a cluster bootstrap made that visible. We report the small gain, the second scoring of the test weeks, the dependence on an assumed capacity and the night-time interval gap as they are. Every number in this report can be traced to committed code, checked by automated tests and reproduced from a fresh clone.
 

@@ -28,7 +28,7 @@ git clone https://github.com/jayvaghela779/cs3011-public-transport-demand-occupa
 cd cs3011-public-transport-demand-occupancy
 pip install -r requirements.txt
 pip install -e .          # makes `import transit` work from anywhere
-pytest -q                 # 86 tests, about 10 seconds
+pytest -q                 # 93 tests, about 15 seconds
 ```
 
 If anything fails on Windows, [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md) has step-by-step setup and troubleshooting.
@@ -101,7 +101,9 @@ SUNT files ──download──▶ data/raw ──build──▶ route_hour.parq
 | `src/transit/report.py` | Writes `RESULTS.md`, the figures, the bootstrap and the alert-list evaluation |
 | `src/transit/verify.py` | Checks that a rerun matches the committed table and metrics |
 | `app/streamlit_app.py` | The dashboard |
-| `tests/` | 86 pytest tests (CI runs them on Ubuntu and Windows) |
+| `web/index.html`, `web/build_site.py`, `web/wheels.txt` | The public in-browser build of the dashboard (GitHub Pages, stlite) |
+| `.github/workflows/pages.yml` | Publishes that build to the `gh-pages` branch when the app or results change on `main` |
+| `tests/` | 93 pytest tests (CI runs them on Ubuntu and Windows) |
 
 ---
 
@@ -241,7 +243,8 @@ All of this runs inside `python -m transit.models.run` (about 8 minutes on 2 CPU
 
 ### Stage 9. Streamlit dashboard: `app/streamlit_app.py`
 
-- **Command:** `streamlit run app/streamlit_app.py`. It reads only committed files, so it starts offline with no download. It is **not deployed** yet; it runs locally.
+- **Command:** `streamlit run app/streamlit_app.py`. It reads only committed files, so it starts offline with no download.
+- **Public copy:** the same file runs in the browser at https://jayvaghela779.github.io/cs3011-public-transport-demand-occupancy/ (GitHub Pages). `web/index.html` loads it with stlite (Streamlit on Pyodide), fetches the app code and committed results through jsDelivr's mirror of the `gh-pages` branch, checks each file's SHA-256 against `site-manifest.json`, and falls back to GitHub Pages for any mismatching copy. `.github/workflows/pages.yml` runs `web/build_site.py` to publish it. `tests/test_web.py` fails if the page's file list misses anything the app reads.
 - **Loading:** `load_metrics()` and `load_predictions(name)` are wrapped in `@st.cache_data`, so files are read once per session.
 - **Pages** (chosen in `main()` from the sidebar):
   - `page_explorer`: pick period (test or validation), route-direction (busiest first, from `route_options`) and day. `day_chart` draws actual, final forecast, last-week rule and the 80% band; open circles are missing records (predicted, not scored). The **capacity slider** (`streamlit_app.py:124`) draws the medium/high threshold lines and recolours the crowding strip.
@@ -452,7 +455,7 @@ len(c), c.boardings.mean()
 1. `app/streamlit_app.py`, top to bottom (it is 346 lines; `main()` is at the end).
 2. `src/transit/crowding.py` (the slider depends on it).
 3. `tests/test_app.py`.
-4. README section "Deployment (free)".
+4. `web/index.html` and `docs/DEMO_RUNBOOK.md` (public deployment and fallbacks).
 
 <details><summary><b>D1. Explain the capacity slider on the Forecast explorer page. Does moving it re-run the model?</b></summary>
 
@@ -476,9 +479,9 @@ Concrete case (route 137 I, Wed 17 Apr, 09:00, forecast estimated load 39.6): ca
 **Expected:** `page_forecast` reads `reports/planning.json`, written by `report.planning_topk()`: for each of the 14 test days, the 50 route-hours with the highest forecast load, and the share that really were high crowding at capacity 70 (92.14%, versus 78.57% for the last-week rule). The forecast for 29 April itself (`forecast_2024-04-29.parquet`, 9,566 route-hours) has no actuals in our data, so it cannot be evaluated; the page says so in a warning.
 </details>
 
-<details><summary><b>D5. If the cloud app is unavailable on the day, what is the fallback, and what do you need on the laptop?</b></summary>
+<details><summary><b>D5. If the public dashboard is slow or unavailable on the day, what is the fallback, and what do you need on the laptop?</b></summary>
 
-**Expected:** run locally: `pip install -r requirements.txt`, then `streamlit run app/streamlit_app.py` (the README notes this is enough for the demo). The app is not deployed yet; until someone deploys and checks it, say "runs locally". Last resort: the 68-second backup video kept on the demo laptop. Check the local run on the demo laptop before the day; `tests/test_app.py::test_page_renders` checks all five pages render without exceptions.
+**Expected:** run locally: `pip install -r requirements.txt`, then `streamlit run app/streamlit_app.py` (the README notes this is enough for the demo). The public GitHub Pages copy runs Python in the visitor's browser: a first visit downloads about 85 MB (83 s at 10 Mbit/s, several minutes on a slow line), a repeat visit about 40 s, so open it once in advance or rely on the local app. Last resort: the narrated backup video kept on the demo laptop. Check the local run on the demo laptop before the day; `tests/test_app.py::test_page_renders` checks all five pages render without exceptions.
 </details>
 
 ### Shivani: crowding and capacity (D10), limitations, future work
@@ -522,7 +525,7 @@ Concrete case (route 137 I, Wed 17 Apr, 09:00, forecast estimated load 39.6): ca
 Run these on your own laptop. They take about a minute together and need no download.
 
 ```bash
-pytest -q                               # expect: 86 passed
+pytest -q                               # expect: 93 passed
 python -m transit.verify                # expect: all 2326 values match
 streamlit run app/streamlit_app.py      # open each of the 5 pages
 ```
