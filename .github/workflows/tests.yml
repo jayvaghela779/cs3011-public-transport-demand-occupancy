@@ -10,11 +10,17 @@ permissions:
 
 jobs:
   pytest:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         python-version: ["3.11", "3.12"]
+        include:
+          # The demo laptop runs Windows, so the tests and the verify
+          # command also run on a Windows runner.
+          - os: windows-latest
+            python-version: "3.12"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -27,3 +33,5 @@ jobs:
           pip install -e .
       - name: Run tests
         run: pytest -q
+      - name: Committed results are self-consistent
+        run: python -m transit.verify
