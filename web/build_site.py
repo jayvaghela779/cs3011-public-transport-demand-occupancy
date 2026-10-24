@@ -80,7 +80,8 @@ def build(out: Path, wheels: bool = True) -> list[str]:
     (out / "README.md").write_text(README, encoding="utf-8")
     if wheels:
         names = download_wheels(out)
-        listed = re.findall(r'"([^"]+\.whl)"', INDEX.read_text(encoding="utf-8"))
+        block = re.search(r"const WHEELS = \[(.*?)\];", INDEX.read_text(encoding="utf-8"), re.S).group(1)
+        listed = re.findall(r'"([^"]+\.whl)"', block)
         if sorted(listed) != names:
             raise SystemExit(f"wheels listed in web/index.html {sorted(listed)} != downloaded {names}")
     return files

@@ -68,7 +68,7 @@ def test_versions_are_pinned():
     lines = [l for l in (config.ROOT / "web" / "wheels.txt").read_text(encoding="utf-8").splitlines()
              if l.strip() and not l.startswith("#")]
     assert all("==" in l and "--hash=sha256:" in l for l in lines), "pin every wheel with a hash"
-    wheels = re.findall(r'"([^"]+\.whl)"', html)
+    wheels = re.findall(r'"([^"]+\.whl)"', re.search(r"const WHEELS = \[(.*?)\];", html, re.S).group(1))
     expected = {p.split("==")[0].replace("-", "_") + "-" + p.split("==")[1] for p in pins}
     assert {"-".join(w.split("-")[:2]) for w in wheels} == expected, "WHEELS in index.html must match web/wheels.txt"
 
