@@ -34,12 +34,12 @@ def synthetic_table():
 
 
 @pytest.fixture(scope="module")
-def results(synthetic_table):
+def results(synthetic_table, tmp_path_factory):
     mp = pytest.MonkeyPatch()
     mp.setattr(lgbm, "GRID", {k: v[:2] for k, v in lgbm.GRID.items()})
     mp.setattr(lgbm, "MAX_ROUNDS", 200)
     mp.setattr(lgbm, "BASE_PARAMS", {**lgbm.BASE_PARAMS, "min_data_in_leaf": 5})
-    mp.setattr(run, "MODEL_DIR", config.ROOT / "models" / "_test")
+    mp.setattr(run, "MODEL_DIR", tmp_path_factory.mktemp("models") / "a" / "b")  # parents must be created
     slots = build_slots(synthetic_table, dates=study_dates() + [config.END_DATE + timedelta(days=1)])
     out = {t: run.run_target(build_features(slots, t), t, lambda s: None) for t in run.TARGETS}
     mp.undo()

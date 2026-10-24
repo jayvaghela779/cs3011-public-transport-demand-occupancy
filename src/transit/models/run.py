@@ -119,7 +119,7 @@ def run_target(X: pd.DataFrame, target: str, log) -> tuple[dict, pd.DataFrame, p
     # 2. refit on train + valid, 3. score once on test
     trva = pd.concat([tr, va])
     final = lgbm.fit_fixed_rounds(trva, feats, cfg, rounds)
-    MODEL_DIR.mkdir(exist_ok=True)
+    MODEL_DIR.mkdir(parents=True, exist_ok=True)
     final.save_model(str(MODEL_DIR / f"{TARGETS[target]}_lgbm.txt"))
 
     # Predict every slot of the validation and test weeks (including missing

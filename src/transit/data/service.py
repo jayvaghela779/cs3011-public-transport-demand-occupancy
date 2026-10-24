@@ -47,7 +47,7 @@ def daytype(d: pd.Series) -> pd.Series:
     """Day type of each service date: weekday, saturday, sunday or holiday."""
     d = pd.to_datetime(d)
     hol = d.dt.date.isin(HOLIDAYS.keys())
-    dow = d.dt.dayofweek
+    dow = d.dt.day_of_week
     out = pd.Series("weekday", index=d.index, dtype="object")
     out[dow == 5] = "saturday"
     out[dow == 6] = "sunday"
@@ -62,7 +62,7 @@ def add_calendar(table: pd.DataFrame) -> pd.DataFrame:
     t["service_date"] = pd.to_datetime(t["service_date"]).dt.normalize()
     t["ts_hour"] = pd.to_datetime(t["ts_hour"])
     t["service_hour"] = ((t["ts_hour"] - t["service_date"]) // pd.Timedelta(hours=1)).astype("int64")
-    t["dow"] = t["service_date"].dt.dayofweek.astype("int64")
+    t["dow"] = t["service_date"].dt.day_of_week.astype("int64")
     t["daytype"] = daytype(t["service_date"])
     t["is_holiday"] = t["daytype"].eq("holiday")
     return t
@@ -123,7 +123,7 @@ def build_slots(table: pd.DataFrame, train_end: date = config.TRAIN_END,
 
     # Fill calendar fields for missing records (measures stay NaN, never zero).
     slots["ts_hour"] = slots["service_date"] + pd.to_timedelta(slots["service_hour"], unit="h")
-    slots["dow"] = slots["service_date"].dt.dayofweek.astype("int64")
+    slots["dow"] = slots["service_date"].dt.day_of_week.astype("int64")
     slots["is_holiday"] = slots["daytype"].eq("holiday")
     obs = slots["status"].eq("observed")
     slots["load_reliable"] = (obs & slots["load_trip_peak_mean"].notna()
