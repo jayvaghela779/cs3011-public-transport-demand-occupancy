@@ -286,7 +286,17 @@ def main() -> None:
             cov_rows.append(f"| {short} ({label}) | {pct(c['all'])} | "
                             + " | ".join(pct(c["period"].get(k, float("nan"))) for k in PERIOD_ORDER)
                             + f" | {pct(c['day']['weekday'])} | {pct(c['day']['weekend'])} |")
+    def days_better(short):
+        bd = m["targets"][short]["segments_test"]["by_day"].values()
+        return f"{sum(v['ensemble_wape'] < v['ha_wape'] for v in bd)} of {len(bd)}"
+
+    def rmse_cmp(short):
+        f, h = m["targets"][short]["test"]["ensemble"]["rmse"], m["targets"][short]["test"]["hist_average"]["rmse"]
+        word = "lower than" if f < h else "higher than"
+        return f"{word} the historical average for {short} ({f:.2f} vs {h:.2f})"
+    rmse_note = "; ".join(rmse_cmp(s) for s in ("demand", "load"))
     plan = planning_topk()
+    plan_gap = 100 * max(abs(v["ensemble"] - v["hist_average"]) for v in plan["precision_at_k"].values())
     (REPORTS / "planning.json").write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
     plan_rows = "\n".join(f"| {k} | {pct(v['ensemble'])} | {pct(v['hist_average'])} | {pct(v['seasonal_naive'])} |"
                            for k, v in plan["precision_at_k"].items())
@@ -327,6 +337,9 @@ last week {pct(dem['valid']['seasonal_naive']['wape'])}. Blend weights tried on 
 **Is the gain real?** Paired bootstrap over route-directions (2,000 resamples; negative = final forecast better):
 
 {boot_rows()}
+
+Day by day, the final forecast has a lower WAPE than the historical average on {days_better('demand')} test days for demand
+and {days_better('load')} for estimated load.
 
 ![Test WAPE](figures/test_wape.png)
 
@@ -460,6 +473,12 @@ median test day had {plan['median_actual_high_per_day']} high route-hours.
 - The test weeks were scored twice (see the disclosure above); the blend weight was chosen on validation only.
 - LightGBM on its own does not beat a well-chosen historical average; most predictable structure here is a
   stable weekly profile per route and hour.
+- The model was tuned on absolute error, and the gain over the historical average is in MAE and WAPE. On RMSE,
+  which weights large errors more, the final forecast is {rmse_note}.
+- The bootstrap resamples route-directions within the same 14 test days, so its interval does not cover
+  week-to-week or seasonal variation.
+- In the daily alert list the final forecast and the historical average differ by at most
+  {plan_gap:.1f} percentage points of precision at K = 25, 50 or 100; the clear gain there is over the last-week rule.
 """
     (REPORTS / "RESULTS.md").write_text(md, encoding="utf-8")
     print(f"Wrote {REPORTS / 'RESULTS.md'} and {len(list(FIG.glob('*.png')))} figures (example: route {ex[0]} {ex[1]} {ex[2]})")

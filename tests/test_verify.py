@@ -38,3 +38,23 @@ def test_table_differences():
     b.loc[1, "boardings"] = 4.5
     assert table_differences(a, b) is not None
     assert table_differences(a, a.iloc[:1]) is not None
+
+
+def test_verify_explains_when_there_is_no_git_clone(monkeypatch, capsys):
+    """A ZIP download (or no git on PATH) must give a clear message, not a traceback."""
+    import subprocess
+
+    from transit import verify
+
+    def no_git(path):
+        raise subprocess.CalledProcessError(128, ["git", "show", f"HEAD:{path}"])
+
+    monkeypatch.setattr(verify, "committed", no_git)
+    assert verify.main([]) == 2
+    assert "needs a git clone" in capsys.readouterr().out
+
+    def git_missing(path):
+        raise FileNotFoundError("git")
+
+    monkeypatch.setattr(verify, "committed", git_missing)
+    assert verify.main([]) == 2

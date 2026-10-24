@@ -13,7 +13,7 @@ Newest first. Each entry records what was decided, why, and what it rules out.
 ## D12. Final forecast is a validation-chosen blend; the test weeks were scored twice (24 Oct 2026)
 
 - **What happened:** the first full run (v1) scored LightGBM alone on the test weeks. It beat "same hour last week" clearly (demand WAPE 18.39% vs 23.67%) but tied the historical-average baseline (18.35%). The validation week had shown the same pattern: LightGBM 18.84% vs historical average 18.99%. v1 is kept in `reports/archive/metrics_v1_lightgbm_only.json`.
-- **Validation-only diagnosis** (`reports/archive/experiments_validation_v2.csv`): a history-length feature and a residual-on-historical-average model did not help (validation WAPE 18.69% to 19.16%). Residual models stopped after 11–31 rounds, so little signal remains beyond the weekly profile.
+- **Validation-only diagnosis** (`reports/archive/experiments_validation_v2.csv`): a history-length feature made demand worse (19.14% to 19.16% validation WAPE against 18.84% for LightGBM alone). A model of the residual from the historical average was slightly better (18.69% to 18.82%), but it stopped after 11–31 rounds, so little signal remains beyond the weekly profile, and the simpler blend below did better (18.65%).
 - **Decision:** final forecast = w × LightGBM + (1 − w) × historical average, with w chosen on validation from {0, 0.25, 0.5, 0.75, 1}. w = 0.5 for both targets. It was then scored once on test (v2).
 - **Disclosure:** the test weeks have been scored twice (v1 and v2). The blend weight was chosen on validation only, and both results are reported.
 
@@ -63,7 +63,7 @@ Newest first. Each entry records what was decided, why, and what it rules out.
 ## D4. Capacity assumption for crowding levels (24 Oct 2026)
 
 - **Decision:** SUNT has no vehicle capacity. Crowding levels will use a capacity value documented with its source, and results will be reported under at least three alternative values.
-- **Status:** the value and its source are not chosen yet (occupancy module).
+- **Status:** superseded by D10, which sets the capacities (ABNT NBR 15570) and the four scenarios.
 
 ## D3. Chronological split and holidays (24 Oct 2026)
 

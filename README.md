@@ -21,22 +21,22 @@ Day-ahead forecasts per route, direction and hour, scored on observed route-hour
 | Same hour last week | 23.67% | 23.30 | 25.39% | 6.21 |
 
 - **Against the usual baseline:** the final forecast cuts error by 23% versus "same hour last week".
-- **Against a strong baseline:** against the historical average the gain is small but consistent: −0.20 WAPE points for demand (95% bootstrap interval −0.29 to −0.06).
+- **Against a strong baseline:** against the historical average the gain is small: −0.20 WAPE points for demand (95% bootstrap interval over route-directions −0.29 to −0.06), lower on 13 of the 14 test days. It is a gain in absolute error only; on RMSE the historical average is slightly better for demand (29.58 vs 29.72).
 - **LightGBM alone does not beat the historical average.** We report this as a finding (decision D12). The test weeks were scored twice, and both runs are disclosed.
-- **Uncertainty:** each forecast has an 80% prediction interval (quantile models plus conformal calibration on validation). It covers 80.4% of actual test demand and 79.3% of test load.
+- **Uncertainty:** each forecast has an 80% prediction interval (quantile models plus conformal calibration on validation). It covers 80.4% of actual test demand and 79.3% of test load overall, but only about 52% of estimated-load values between midnight and 2 AM (see RESULTS.md, decision D13).
 - **Crowding levels** (load ÷ capacity: low < 50%, high ≥ 80%) for a standard 70-passenger bus: macro-F1 0.769. "High crowding" alerts are right 79% of the time and catch 61% of high hours. Results for 40, 80 and 100-passenger buses are in the results file.
 
 ## Team
 
-| Member | Module |
+| Member | Presents and answers questions on (provisional) |
 | --- | --- |
-| Jay Pravin Vaghela (lead) | Architecture, demand model, integration |
-| Akshar Jasoliya | Data pipeline |
-| Tirth Jasoliya | Occupancy model and evaluation |
-| Disha Khushalani | Streamlit app |
-| Shivani Mahour | Presentation and documentation |
+| Jay Pravin Vaghela (lead) | Framing, architecture, models and the blend decision |
+| Akshar Jasoliya | Data, licence, pipeline and quality rules |
+| Tirth Jasoliya | Evaluation protocol, results and error analysis |
+| Disha Khushalani | Dashboard demo and deployment |
+| Shivani Mahour | Crowding, capacity assumption and limitations |
 
-Module owners are a proposal and may change; see [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md).
+This is the speaking split in the slides, not a record of who wrote which code; see "How this project uses outside work" below and [docs/TEAM_PRESENTATION_GUIDE.md](docs/TEAM_PRESENTATION_GUIDE.md).
 
 ## Data
 
@@ -85,6 +85,8 @@ streamlit run app/streamlit_app.py
 
 `requirements.txt` allows newer releases. If a future release ever changes the results, install the exact versions that reproduced them instead: `pip install -r requirements-lock.txt` (tested on Python 3.12).
 
+Step-by-step setup for team laptops (including Windows), the 3-minute demo script and troubleshooting are in [docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md).
+
 The dashboard reads only committed files, so `pip install -r requirements.txt` and `streamlit run app/streamlit_app.py` are enough for the demo. No download is needed, and it works offline.
 
 ## Deployment (free)
@@ -96,7 +98,9 @@ Raw files are cached in `data/raw/` and are never committed. To reproduce everyt
 ## Repository layout
 
 ```
-docs/                 plan, decisions (D1-D13), data card, architecture, viva preparation, code walkthrough
+docs/                 plan, decisions (D1-D13), data card, architecture, viva question bank,
+                      team presentation guide, demo runbook, final readiness checklist,
+                      code walkthrough
 data/manifest/        pinned list of SUNT source files with SHA-256 checksums
 data/raw/             downloaded SUNT files (git-ignored)
 data/processed/       route-hour table and quality report
@@ -111,7 +115,7 @@ tests/                pytest tests
 
 - **Data:** SUNT, used under CC BY 4.0 with attribution. Derived files state what we changed.
 - **Ideas, not code:** we studied the SUNT examples repository, an Aarhus University thesis on passenger forecasting, and published bus-occupancy studies. Repositories without a licence are read and cited, never copied.
-- **AI assistance:** parts of the code and documentation were drafted with the help of Claude (Anthropic) under the team's direction. Commits that include AI-assisted work carry a `Co-Authored-By` line.
+- **AI assistance:** the code and documents in this repository were written in AI-assisted sessions with Claude (Anthropic), directed and reviewed by Jay. Every such commit carries a `Co-Authored-By` line; as of 24 Oct 2026 that is every commit. Teammates' own reviews and changes are committed from their own accounts.
 
 ## Licence
 
