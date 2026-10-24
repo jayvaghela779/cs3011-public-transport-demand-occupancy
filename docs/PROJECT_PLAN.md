@@ -29,7 +29,7 @@ An "extra trips needed" figure is optional and illustrative only, under the stat
 | --- | --- | --- |
 | Train | 1 Mar to 7 Apr | Model fitting |
 | Validation | 8 Apr to 14 Apr | Tuning |
-| Test | 15 Apr to 28 Apr | Used once, after tuning |
+| Test | 15 Apr to 28 Apr | Final scoring (scored twice in total; disclosed, decision D12) |
 
 - 29 and 30 April 2024 are excluded: those files cover noticeably fewer routes than other days.
 - Good Friday (29 Mar 2024) is inside the training period. It is **not** a held-out holiday test.
@@ -58,38 +58,26 @@ The Victoria train-count dataset is a stretch goal only if the core is finished 
 - [x] Decision report reviewed and approved (24 Oct)
 - [x] SUNT licence confirmed on GitHub, Mendeley Data and Hugging Face (CC BY 4.0)
 - [x] Repository skeleton and documentation
-- [x] Data pipeline: download, aggregation, quality report (24 Oct; all 6 checks pass)
-- [x] Unit tests for the pipeline (18 tests, pandas 2.2 and 3.0)
-- [ ] Choose how to treat route-hours with no service (zero or missing) before modelling
-- [ ] Baselines
-- [ ] LightGBM demand model
-- [ ] Estimated-load model and capacity sensitivity
-- [ ] Streamlit app and cloud deployment
-- [ ] Error analysis and results tables
-- [ ] Code freeze
-- [ ] Slides, viva sheet, demo video
-- [ ] Rehearsals
+- [x] Data pipeline: download, aggregation, quality report (all 6 checks pass)
+- [x] Missing-hour policy (D8), malformed trips (D9), capacity (D10), bursts (D11)
+- [x] Baselines, LightGBM, validation tuning and ablation, final blend (D12)
+- [x] Test evaluation, error analysis, crowding sensitivity, bootstrap intervals ([RESULTS.md](../reports/RESULTS.md))
+- [x] Streamlit dashboard (5 pages) with smoke tests; checked in headless Chromium
+- [x] 68 tests; GitHub Actions on Python 3.11 and 3.12
+- [x] Architecture document, viva preparation sheet, slide deck draft (claude.ai artifact, shared by Jay)
+- [ ] **Jay:** deploy on Streamlit Community Cloud (needs his GitHub sign-in); add the URL to the README
+- [ ] **Jay:** share the slide deck with the team; agree the speaking split
+- [ ] **Akshar:** run the full pipeline from a fresh clone (Colab or own laptop) and post the output on GitHub
+- [ ] **Tirth:** read RESULTS.md end to end; check the error-analysis claims against the dashboard
+- [ ] **Disha:** rehearse the 3-minute demo; record the backup demo video
+- [ ] **Shivani:** read DECISIONS.md D8–D12 and VIVA_PREP.md; own the limitations slide
+- [ ] **All:** each member runs `pytest` and the app on their own laptop before 1 Nov
+- [ ] **All:** code freeze at the end of 31 Oct; rehearsals 1–2 Nov
+- [ ] **Team decision:** a licence for our own code (MIT proposed)
 
-## Progress notes and continuation checklist (24 Oct 2026, 05:15 IST)
+### How the work was done
 
-Work stopped at a safe checkpoint so usage is preserved. Nothing below has been evaluated on the test weeks yet.
-
-**Done**
-- PR #1 merged (data pipeline, D8 service profile, D9 malformed-trip flag, 50 tests, GitHub Actions on Python 3.11 and 3.12 passing).
-- Branch `feature/models` (work in progress, not merged): leak-free day-ahead features, three baselines, LightGBM training with validation tuning, metrics, crowding levels (D10), results-report generator and a Streamlit app. 58 tests pass, including a test that features for day D are unchanged when data on or after D is altered.
-- One partial training run (stopped before finishing). Validation-week results only, for orientation:
-    - Demand: best LightGBM (L1 objective, 63 leaves) validation WAPE 18.84%. Ablation: calendar + route only 21.64%; adding same-hour history 18.89%; all features 18.84%.
-    - Estimated load: best so far (L1, 63 leaves) validation WAPE 19.54%.
-    - Baselines on validation and all test metrics: not yet computed.
-
-**Next steps, in order**
-1. `python -m transit.models.run` (about 25 min on 2 CPUs). It writes `reports/metrics.json`, `reports/tuning_*.csv` and `data/predictions/*.parquet`. This is the first and only test-set scoring.
-2. `python -m transit.report` to write `reports/RESULTS.md` and the figures. It stops with an error if the metrics do not match the prediction files.
-3. `streamlit run app/streamlit_app.py`. Check every page loads; it has not been run yet. Add a `streamlit.testing` smoke test.
-4. Commit the results, open a PR for `feature/models`, wait for CI, and merge.
-5. Deploy on Streamlit Community Cloud (Jay signs in with GitHub at share.streamlit.io; main file `app/streamlit_app.py`). Local fallback: `streamlit run app/streamlit_app.py`.
-6. README results section, architecture diagram, slides, viva sheet (from the relevant lecture PDFs), backup demo video.
-7. Quality-review loop (score out of 20, up to 5 iterations).
+The pipeline, models, dashboard and documents in this repository were built in AI-assisted sessions directed by Jay (commits carry a `Co-Authored-By: Claude` line). Teammates' own reviews, runs and edits should be committed from their own accounts so the history shows each contribution.
 
 ## Open questions for the TA
 
