@@ -5,6 +5,8 @@ CS3011 Artificial Intelligence course project, PDPM IIITDM Jabalpur. Group 52.
 The system analyses public-transport data to forecast passenger demand and estimated on-board load (our occupancy target), so that service planning can respond to demand.
 
 > **Status (24 Oct 2026):** data pipeline, models, evaluation and dashboard work end to end. Full results: [reports/RESULTS.md](reports/RESULTS.md). Every number comes from a committed script and its output files.
+>
+> **Documents:** project report ([source](reports/project_report/CS3011_Group52_Project_Report.md), [PDF](reports/project_report/CS3011_Group52_Project_Report.pdf), [Word](reports/project_report/CS3011_Group52_Project_Report.docx)); code walkthrough for the team ([docs/PROJECT_CODE_WALKTHROUGH.md](docs/PROJECT_CODE_WALKTHROUGH.md)).
 
 ## Results (test weeks, 15–28 April 2024)
 
@@ -94,12 +96,12 @@ Raw files are cached in `data/raw/` and are never committed. To reproduce everyt
 ## Repository layout
 
 ```
-docs/                 plan, decisions (D1-D13), data card, architecture, viva preparation
+docs/                 plan, decisions (D1-D13), data card, architecture, viva preparation, code walkthrough
 data/manifest/        pinned list of SUNT source files with SHA-256 checksums
 data/raw/             downloaded SUNT files (git-ignored)
 data/processed/       route-hour table and quality report
 data/predictions/     validation, test and next-day predictions used by the report and the app
-reports/              metrics.json, RESULTS.md, figures, archived first test scoring
+reports/              metrics.json, RESULTS.md, figures, archived first test scoring, project report
 src/transit/          project code (installed as the `transit` package)
 app/                  Streamlit dashboard
 tests/                pytest tests
