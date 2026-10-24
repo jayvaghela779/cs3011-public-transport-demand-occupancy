@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import confusion_matrix, f1_score, precision_recall_fscore_support
 
 
 def regression_metrics(y: pd.Series | np.ndarray, p: pd.Series | np.ndarray) -> dict:
@@ -25,6 +24,10 @@ def regression_metrics(y: pd.Series | np.ndarray, p: pd.Series | np.ndarray) -> 
 
 
 def classification_metrics(y_true, y_pred, labels: list[str]) -> dict:
+    # Imported here so that the dashboard, which only needs regression_metrics,
+    # does not load scikit-learn (it matters for the in-browser build).
+    from sklearn.metrics import confusion_matrix, f1_score, precision_recall_fscore_support
+
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
     prec, rec, f1, sup = precision_recall_fscore_support(y_true, y_pred, labels=labels, zero_division=0)
