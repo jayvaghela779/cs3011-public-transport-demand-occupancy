@@ -1,0 +1,15 @@
+target,variant,valid_wape,best_iteration
+boardings,hist_average baseline,0.18991434788285652,
+boardings,v1 (reference),0.18841749447709136,130.0
+boardings,+ y_hist_n,0.1914116209980278,216.0
+boardings,"+ y_hist_n, train rows with >=3 history days",0.1915518166695455,97.0
+boardings,residual on hist_average + y_hist_n,0.18694948074259504,31.0
+boardings,"residual, >=3 history days",0.18763815188739977,11.0
+boardings,"residual, >=3 days, 15 leaves",0.18822302563733304,21.0
+load_trip_peak_mean,hist_average baseline,0.19664304449736725,
+load_trip_peak_mean,v1 (reference),0.19538454197478075,140.0
+load_trip_peak_mean,+ y_hist_n,0.1990070172575663,73.0
+load_trip_peak_mean,"+ y_hist_n, train rows with >=3 history days",0.20030246337122296,73.0
+load_trip_peak_mean,residual on hist_average + y_hist_n,0.195767108684717,20.0
+load_trip_peak_mean,"residual, >=3 history days",0.19673031204146646,15.0
+load_trip_peak_mean,"residual, >=3 days, 15 leaves",0.19697509979904973,3.0

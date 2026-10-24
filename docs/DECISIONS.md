@@ -2,6 +2,13 @@
 
 Newest first. Each entry records what was decided, why, and what it rules out.
 
+## D12. Final forecast is a validation-chosen blend; the test weeks were scored twice (24 Oct 2026)
+
+- **What happened:** the first full run (v1) scored LightGBM alone on the test weeks. It beat "same hour last week" clearly (demand WAPE 18.39% vs 23.67%) but tied the historical-average baseline (18.35%). The validation week had shown the same pattern: LightGBM 18.84% vs historical average 18.99%. v1 is kept in `reports/archive/metrics_v1_lightgbm_only.json`.
+- **Validation-only diagnosis** (`reports/archive/experiments_validation_v2.csv`): a history-length feature and a residual-on-historical-average model did not help (validation WAPE 18.69% to 19.16%). Residual models stopped after 11–31 rounds, so little signal remains beyond the weekly profile.
+- **Decision:** final forecast = w × LightGBM + (1 − w) × historical average, with w chosen on validation from {0, 0.25, 0.5, 0.75, 1}. w = 0.5 for both targets. It was then scored once on test (v2).
+- **Disclosure:** the test weeks have been scored twice (v1 and v2). The blend weight was chosen on validation only, and both results are reported.
+
 ## D11. Burst validations are kept, not capped (24 Oct 2026)
 
 - **Finding:** the 2,685 stop events with more than 100 boardings are 99.8% at 10 stops, all at the first stop of a trip, mostly 06:00–08:00 and 17:00–18:00. The top stops are terminals and stations (Lapa, Pirajá, Acesso Norte). This fits station turnstile validations being attributed to the departing bus, so they look like real crowds, possibly over-attributed to one vehicle.
