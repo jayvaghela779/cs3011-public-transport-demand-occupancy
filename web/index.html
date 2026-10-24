@@ -10,9 +10,9 @@
 
       This page runs the unchanged Streamlit app (app/streamlit_app.py) inside the
       visitor's browser with stlite (Streamlit on Pyodide, Python compiled to
-      WebAssembly). There is no server. The app code and the committed result files
-      are served next to this page; .github/workflows/pages.yml copies them from main
-      (web/build_site.py), so the site shows exactly what is committed there.
+      WebAssembly). There is no server. .github/workflows/pages.yml copies the app code
+      and the committed result files from main next to this page (web/build_site.py),
+      with a SHA-256 manifest, so the site shows exactly what is committed there.
       Nothing is trained or uploaded.
 
       Pinned: stlite 1.12.0 (Streamlit 1.65, Pyodide 314.0.3), plotly 7.1.0.
@@ -31,7 +31,8 @@
     <div id="root">
       <div id="boot">
         <h1>AI Based Public Transport Demand and Occupancy Prediction</h1>
-        <p>Loading the dashboard. It runs Python inside your browser, so the first visit downloads about 70 MB and can take a minute or two. Later visits are faster.</p>
+        <p>Loading the dashboard. It runs Python inside your browser, so the first visit downloads about 80 MB: our result files first, then the Python runtime. On a slow connection this takes several minutes; later visits reuse the browser cache and are much faster.</p>
+        <p id="progress" class="small" aria-live="polite">Starting.</p>
         <p class="small">CS3011 Artificial Intelligence, Group 52, PDPM IIITDM Jabalpur. Code and results:
           <a href="https://github.com/jayvaghela779/cs3011-public-transport-demand-occupancy">github.com/jayvaghela779/cs3011-public-transport-demand-occupancy</a>.
           Needs a recent Chrome, Edge, Firefox or Safari with JavaScript enabled.</p>
@@ -41,9 +42,16 @@
     <script type="module">
       const STLITE = "https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.0/build/";
       const PYODIDE = "https://cdn.jsdelivr.net/pyodide/v314.0.3/full/pyodide.mjs";
-      // Same origin as this page. (raw.githubusercontent.com did not load at all from
-      // one Indian network we tested on 24 Oct 2026, while github.io and jsDelivr did.)
-      const here = (f) => new URL(f, document.baseURI).href;
+      // The app files and results are published on this site (gh-pages). They are
+      // downloaded from jsDelivr's mirror of that branch first, because on a network we
+      // tested on 24 Oct 2026 github.io sent large files at about 0.1 Mbit/s and
+      // raw.githubusercontent.com not at all, while jsDelivr ran at the line's full
+      // speed. Every file is checked against site-manifest.json (SHA-256, written from
+      // main by web/build_site.py); a stale, failed or stalled copy is fetched again
+      // from this site, so the app always gets exactly the committed files.
+      const SITE = new URL(".", document.baseURI).href;
+      const MIRROR = "https://cdn.jsdelivr.net/gh/jayvaghela779/cs3011-public-transport-demand-occupancy@gh-pages/";
+      const STALL_MS = 20000;   // give up on a source after 20 s without any new bytes
 
       // Every file the app reads. tests/test_web.py checks this list against the app's imports and paths.
       const FILES = [
@@ -60,20 +68,94 @@
         "data/predictions/forecast_2024-04-29.parquet",
       ];
 
-      const { mount } = await import(STLITE + "stlite.js");
-      mount(
-        {
-          entrypoint: "app/streamlit_app.py",
-          requirements: ["plotly==7.1.0"],
-          pyodideUrl: PYODIDE,
-          files: Object.fromEntries(FILES.map((f) => [f, { url: here(f) }])),
-          streamlitConfig: {
-            "client.toolbarMode": "viewer",
-            "browser.gatherUsageStats": false,
+      const progress = document.getElementById("progress");
+      const say = (t) => { if (progress) progress.textContent = t; };
+      const mb = (n) => (n / 1e6).toFixed(1);
+
+      async function hex(buf) {
+        const d = new Uint8Array(await crypto.subtle.digest("SHA-256", buf));
+        return Array.from(d, (b) => b.toString(16).padStart(2, "0")).join("");
+      }
+
+      // Download url, calling onBytes(n) as data arrives; abort if nothing arrives for STALL_MS.
+      async function download(url, onBytes) {
+        const ctrl = new AbortController();
+        let timer = setTimeout(() => ctrl.abort(), STALL_MS);
+        try {
+          const r = await fetch(url, { signal: ctrl.signal });
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          const reader = r.body.getReader();
+          const parts = [];
+          let n = 0;
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            clearTimeout(timer);
+            timer = setTimeout(() => ctrl.abort(), STALL_MS);
+            parts.push(value);
+            n += value.length;
+            onBytes(value.length);
+          }
+          const out = new Uint8Array(n);
+          let at = 0;
+          for (const p of parts) { out.set(p, at); at += p.length; }
+          return out;
+        } finally {
+          clearTimeout(timer);
+        }
+      }
+
+      async function getFile(path, want, onBytes) {
+        for (const base of [MIRROR, SITE]) {
+          let got = 0;
+          try {
+            const data = await download(base + path, (k) => { got += k; onBytes(k); });
+            if (data.length === want.bytes && (await hex(data)) === want.sha256) return data;
+            console.warn(`${path}: copy from ${base} does not match the manifest; trying the next source`);
+          } catch (e) {
+            console.warn(`${path}: ${base} failed (${e}); trying the next source`);
+          }
+          onBytes(-got);
+        }
+        throw new Error(`Could not download ${path}`);
+      }
+
+      try {
+        say("Reading the file list.");
+        const manifest = await (await fetch(SITE + "site-manifest.json", { cache: "no-cache" })).json();
+        const total = FILES.reduce((s, f) => s + manifest.files[f].bytes, 0);
+        let done = 0;
+        const files = {};
+        const queue = [...FILES];
+        const worker = async () => {
+          for (let f; (f = queue.shift()); ) {
+            files[f] = await getFile(f, manifest.files[f], (k) => {
+              done += k;
+              say(`Downloading results: ${mb(done)} of ${mb(total)} MB.`);
+            });
+          }
+        };
+        await Promise.all([worker(), worker(), worker()]);
+        say("Results downloaded and checked. Starting Python.");
+
+        const { mount } = await import(STLITE + "stlite.js");
+        mount(
+          {
+            entrypoint: "app/streamlit_app.py",
+            requirements: ["plotly==7.1.0"],
+            pyodideUrl: PYODIDE,
+            files: Object.fromEntries(FILES.map((f) => [f, files[f]])),
+            streamlitConfig: {
+              "client.toolbarMode": "viewer",
+              "browser.gatherUsageStats": false,
+            },
           },
-        },
-        document.getElementById("root"),
-      );
+          document.getElementById("root"),
+        );
+      } catch (e) {
+        say(`Loading failed: ${e.message}. Reload the page to try again, or run the app locally (see the repository README).`);
+        throw e;
+      }
     </script>
   </body>
 </html>
