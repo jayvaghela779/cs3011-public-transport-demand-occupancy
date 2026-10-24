@@ -5,7 +5,7 @@
 **Group:** 52
 **Evaluation:** Tuesday 3 November 2026, 6:00 PM (presentation plus fully functional running code)
 
-Last updated: 24 Oct 2026.
+Last updated: 24 Oct 2026, 06:35 IST (AI-assisted session paused; see the continuation checklist at the end).
 
 ## Objective
 
@@ -105,3 +105,36 @@ These are unresolved. Work continues meanwhile, and nothing in the presentation 
 | SUNT hosts unavailable | Team keeps a private copy of the 59 raw files (not in this public repo) |
 | Time leakage | Chronological split; tests that features use only data at least 24 h old |
 | Uneven contribution history | Feature branches; each member commits from their own account |
+
+## Continuation checklist (session paused 24 Oct 2026, morning)
+
+Jay asked for the AI-assisted session to stop at 7:30 AM IST and wait for him. State at the pause:
+
+**Done and merged into `main`** (PRs #1–#6, all CI green):
+- Pipeline, models, evaluation, dashboard, documents and tests as listed in the task tracker above.
+- A fresh-clone rerun reproduced every committed result exactly ([record](ARCHITECTURE.md#reproduction-record)).
+- CI runs `pytest` and `python -m transit.verify` on Ubuntu (Python 3.11, 3.12) and Windows (Python 3.12, with both `requirements.txt` and `requirements-lock.txt`).
+
+**Next actions, in order**
+1. **Jay:** deploy on Streamlit Community Cloud (main file `app/streamlit_app.py`, branch `main`) and add the URL to the README. This needs his own GitHub sign-in.
+2. **Jay:** share the slide deck with the team and review it visually. Nobody has looked at the rendered slides yet.
+3. **Each member:** `pip install -r requirements.txt`, `pip install -e .`, `pytest`, `streamlit run app/streamlit_app.py` on your own laptop, and commit a small fix or note from your own account.
+4. **Akshar:** run `notebooks/reproduce_on_colab.ipynb` on Colab and post the `transit.verify` output in a GitHub issue.
+5. **Team decisions:** code licence (MIT proposed); whether to fix the night-time load interval gap (D13) or leave it as a stated limitation.
+6. **Jay (not done by the AI):** send the open TA questions above. Nobody has contacted the TA.
+7. Rehearse the demo with the local fallback ready; keep the 68-second backup video on the demo laptop.
+
+**Not started, deliberately:** an "extra trips needed" figure (D5, optional), the Victoria stretch dataset, and any change that would score the test weeks again.
+
+### Review log (AI self-assessment against the rubric Jay set; not a course mark)
+
+| Iteration | Problem, data, licence (4) | ML method and results (5) | Code and reproducibility (4) | Dashboard and demo (3) | Planning value (2) | Docs, slides, viva (2) | Total (20) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | | | | | | | 15.5 |
+| 2 | | | | | | | 16.5 |
+| 3 | 3.5 | 4.0 | 3.75 | 2.5 | 1.75 | 1.5 | 17.0 |
+| 4 | 3.75 | 4.0 | 3.75 | 2.5 | 1.75 | 1.5 | 17.25 |
+| 5 | 3.75 | 4.0 | 4.0 | 2.5 | 1.75 | 1.5 | 17.5 |
+
+Only the totals for iterations 1 and 2 are kept here. The five-iteration limit has been reached. What still costs points needs people, not code: no public deployment, slides never visually reviewed or rehearsed, the TA has not confirmed the dataset and the label, the test weeks have been scored twice, and the blend's gain over the historical average is small (0.2 WAPE points).
+
