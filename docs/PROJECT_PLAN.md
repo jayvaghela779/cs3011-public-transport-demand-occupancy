@@ -67,6 +67,9 @@ The Victoria train-count dataset is a stretch goal only if the core is finished 
 - [x] Full rerun from a fresh clone (Linux, Python 3.12) reproduced every committed result ([record](ARCHITECTURE.md#reproduction-record))
 - [x] Architecture document, viva preparation sheet, slide deck draft (claude.ai artifact; private until Jay shares it)
 - [x] Backup demo video recorded (68 s, no narration; saved in Jay's local project folder, not in the repository)
+- [x] Project report drafted (24 Oct): Markdown source, Word and PDF in [`reports/project_report/`](../reports/project_report/), rebuilt with `python reports/project_report/build_report.py`; numbers checked against RESULTS.md
+- [x] Code walkthrough with per-member reading paths and exercises: [PROJECT_CODE_WALKTHROUGH.md](PROJECT_CODE_WALKTHROUGH.md)
+- [ ] **All:** read the report and correct anything you disagree with; each member works through their section of the code walkthrough (exercises first, answers second)
 - [ ] **Jay:** deploy on Streamlit Community Cloud (needs his GitHub sign-in); add the URL to the README
 - [ ] **Jay:** share the slide deck with the team; agree the speaking split
 - [ ] **Akshar:** run [`notebooks/reproduce_on_colab.ipynb`](../notebooks/reproduce_on_colab.ipynb) on Colab (or the README steps on his laptop) and post the `transit.verify` output in a GitHub issue
