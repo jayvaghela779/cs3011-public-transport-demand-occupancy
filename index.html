@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>AI Based Public Transport Demand and Occupancy Prediction</title>
+    <meta name="description" content="CS3011 Group 52 dashboard: day-ahead bus demand and estimated on-board load forecasts (SUNT data, Salvador, Brazil). Runs Python in the browser." />
+    <!--
+      Public dashboard for CS3011 Group 52, hosted on GitHub Pages.
+
+      This page runs the unchanged Streamlit app (app/streamlit_app.py) inside the
+      visitor's browser with stlite (Streamlit on Pyodide, Python compiled to
+      WebAssembly). There is no server: the app code and the committed result files
+      are fetched from this repository's main branch, so the page always shows
+      exactly what is committed there. Nothing is trained or uploaded.
+
+      Pinned: stlite 1.12.0 (Streamlit 1.65, Pyodide 314.0.3), plotly 7.1.0.
+      To change versions or files, edit web/index.html on main and copy it to the
+      gh-pages branch (docs/DEMO_RUNBOOK.md, "Public deployment").
+    -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.0/build/stlite.css" />
+    <style>
+      body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #ffffff; color: #1f2937; }
+      #boot { max-width: 640px; margin: 15vh auto 0; padding: 0 16px; line-height: 1.5; }
+      #boot h1 { font-size: 22px; margin: 0 0 12px; }
+      #boot p { margin: 0 0 10px; font-size: 16px; }
+      #boot .small { font-size: 14px; color: #4b5563; }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div id="boot">
+        <h1>AI Based Public Transport Demand and Occupancy Prediction</h1>
+        <p>Loading the dashboard. It runs Python inside your browser, so the first visit downloads about 70 MB and can take a minute or two. Later visits are faster.</p>
+        <p class="small">CS3011 Artificial Intelligence, Group 52, PDPM IIITDM Jabalpur. Code and results:
+          <a href="https://github.com/jayvaghela779/cs3011-public-transport-demand-occupancy">github.com/jayvaghela779/cs3011-public-transport-demand-occupancy</a>.
+          Needs a recent Chrome, Edge, Firefox or Safari with JavaScript enabled.</p>
+      </div>
+    </div>
+    <noscript>This dashboard needs JavaScript.</noscript>
+    <script type="module">
+      const STLITE = "https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.0/build/";
+      const PYODIDE = "https://cdn.jsdelivr.net/pyodide/v314.0.3/full/pyodide.mjs";
+      const REPO = "https://raw.githubusercontent.com/jayvaghela779/cs3011-public-transport-demand-occupancy/main/";
+
+      // Every file the app reads. tests/test_web.py checks this list against the app's imports and paths.
+      const FILES = [
+        "app/streamlit_app.py",
+        "src/transit/__init__.py",
+        "src/transit/crowding.py",
+        "src/transit/metrics.py",
+        "reports/metrics.json",
+        "reports/planning.json",
+        "data/predictions/demand_valid.parquet",
+        "data/predictions/demand_test.parquet",
+        "data/predictions/load_valid.parquet",
+        "data/predictions/load_test.parquet",
+        "data/predictions/forecast_2024-04-29.parquet",
+      ];
+
+      const { mount } = await import(STLITE + "stlite.js");
+      mount(
+        {
+          entrypoint: "app/streamlit_app.py",
+          requirements: ["plotly==7.1.0"],
+          pyodideUrl: PYODIDE,
+          files: Object.fromEntries(FILES.map((f) => [f, { url: REPO + f }])),
+          streamlitConfig: {
+            "client.toolbarMode": "viewer",
+            "browser.gatherUsageStats": false,
+          },
+        },
+        document.getElementById("root"),
+      );
+    </script>
+  </body>
+</html>
