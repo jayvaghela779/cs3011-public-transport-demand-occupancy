@@ -15,7 +15,7 @@
       with a SHA-256 manifest, so the site shows exactly what is committed there.
       Nothing is trained or uploaded.
 
-      Pinned: stlite 1.12.0 (Streamlit 1.65, Pyodide 314.0.3), plotly 7.1.0.
+      Pinned: stlite 1.12.0 (Streamlit 1.65, Pyodide 314.0.3) and the wheels in web/wheels.txt.
       Edit this file on main, never on gh-pages.
     -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.0/build/stlite.css" />
@@ -52,6 +52,13 @@
       const SITE = new URL(".", document.baseURI).href;
       const MIRROR = "https://cdn.jsdelivr.net/gh/jayvaghela779/cs3011-public-transport-demand-occupancy@gh-pages/";
       const STALL_MS = 20000;   // give up on a source after 20 s without any new bytes
+      // Pure-Python wheels from web/wheels.txt, published in the site's wheels/ folder
+      // (files.pythonhosted.org was also throttled on that network).
+      const WHEELS = [
+        "plotly-7.1.0-py3-none-any.whl",
+        "itsdangerous-2.2.0-py3-none-any.whl",
+        "python_multipart-0.0.32-py3-none-any.whl",
+      ];
 
       // Every file the app reads. tests/test_web.py checks this list against the app's imports and paths.
       const FILES = [
@@ -136,13 +143,21 @@
           }
         };
         await Promise.all([worker(), worker(), worker()]);
+        // Wheels: use the mirror if it has them, otherwise this site.
+        const wheelUrls = await Promise.all(WHEELS.map(async (w) => {
+          try {
+            const r = await fetch(MIRROR + "wheels/" + w, { method: "HEAD" });
+            if (r.ok) return MIRROR + "wheels/" + w;
+          } catch (e) { /* fall through */ }
+          return SITE + "wheels/" + w;
+        }));
         say("Results downloaded and checked. Starting Python.");
 
         const { mount } = await import(STLITE + "stlite.js");
         mount(
           {
             entrypoint: "app/streamlit_app.py",
-            requirements: ["plotly==7.1.0"],
+            requirements: wheelUrls,
             pyodideUrl: PYODIDE,
             files: Object.fromEntries(FILES.map((f) => [f, files[f]])),
             streamlitConfig: {

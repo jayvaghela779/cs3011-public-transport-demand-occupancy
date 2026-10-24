@@ -1,12 +1,13 @@
 """Assemble the GitHub Pages site for the in-browser dashboard.
 
-    python web/build_site.py OUT_DIR
+    python web/build_site.py OUT_DIR [--no-wheels]
 
 Copies web/index.html and every file it lists (the app, the transit modules it
 imports and the committed result files) into OUT_DIR, keeping their repository
 paths, and writes site-manifest.json with each file's size and SHA-256. The page
 downloads the files (from a CDN mirror of the site, or the site itself) and only
-uses a copy whose hash matches the manifest. The list lives only in
+uses a copy whose hash matches the manifest. It also downloads the pinned,
+hash-checked wheels in web/wheels.txt into OUT_DIR/wheels (skip with --no-wheels). The list lives only in
 web/index.html; tests/test_web.py checks it against what the app reads.
 The pages workflow (.github/workflows/pages.yml) runs this on every relevant
 push to main and commits the result to the gh-pages branch.
@@ -53,7 +54,15 @@ def source_commit() -> str:
         return "unknown"
 
 
-def build(out: Path) -> list[str]:
+def download_wheels(out: Path) -> list[str]:
+    """pip-download the pinned wheels (hashes required) into out/wheels."""
+    dest = out / "wheels"
+    subprocess.run([sys.executable, "-m", "pip", "download", "--no-deps", "--only-binary=:all:",
+                    "--require-hashes", "-r", str(ROOT / "web" / "wheels.txt"), "-d", str(dest)], check=True)
+    return sorted(p.name for p in dest.glob("*.whl"))
+
+
+def build(out: Path, wheels: bool = True) -> list[str]:
     out.mkdir(parents=True, exist_ok=True)
     files = listed_files()
     for f in files:
@@ -69,11 +78,17 @@ def build(out: Path) -> list[str]:
     shutil.copy2(INDEX, out / "index.html")
     (out / ".nojekyll").write_text("", encoding="utf-8")   # serve files as they are (keeps __init__.py)
     (out / "README.md").write_text(README, encoding="utf-8")
+    if wheels:
+        names = download_wheels(out)
+        listed = re.findall(r'"([^"]+\.whl)"', INDEX.read_text(encoding="utf-8"))
+        if sorted(listed) != names:
+            raise SystemExit(f"wheels listed in web/index.html {sorted(listed)} != downloaded {names}")
     return files
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    args = [a for a in sys.argv[1:] if a != "--no-wheels"]
+    if len(args) != 1:
         raise SystemExit(__doc__)
-    done = build(Path(sys.argv[1]))
+    done = build(Path(args[0]), wheels="--no-wheels" not in sys.argv)
     print(f"Site written to {sys.argv[1]}: index.html and {len(done)} files")

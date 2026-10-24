@@ -63,8 +63,14 @@ def test_versions_are_pinned():
     html = INDEX.read_text(encoding="utf-8")
     assert re.search(r"@stlite/browser@\d+\.\d+\.\d+/", html), "pin an exact stlite version"
     assert re.search(r"pyodide/v[\d.]+/full/pyodide\.mjs", html), "pin an exact Pyodide version"
-    reqs = re.search(r"requirements: \[(.*?)\]", html).group(1)
-    assert all("==" in r for r in re.findall(r'"([^"]+)"', reqs)), "pin package versions"
+    pins = [l.split()[0] for l in (config.ROOT / "web" / "wheels.txt").read_text(encoding="utf-8").splitlines()
+            if l.strip() and not l.startswith("#")]
+    lines = [l for l in (config.ROOT / "web" / "wheels.txt").read_text(encoding="utf-8").splitlines()
+             if l.strip() and not l.startswith("#")]
+    assert all("==" in l and "--hash=sha256:" in l for l in lines), "pin every wheel with a hash"
+    wheels = re.findall(r'"([^"]+\.whl)"', html)
+    expected = {p.split("==")[0].replace("-", "_") + "-" + p.split("==")[1] for p in pins}
+    assert {"-".join(w.split("-")[:2]) for w in wheels} == expected, "WHEELS in index.html must match web/wheels.txt"
 
 
 def test_build_site_copies_every_listed_file(tmp_path):
@@ -73,7 +79,7 @@ def test_build_site_copies_every_listed_file(tmp_path):
         import build_site
     finally:
         sys.path.pop(0)
-    files = build_site.build(tmp_path)
+    files = build_site.build(tmp_path, wheels=False)   # no network in tests
     assert (tmp_path / "index.html").read_text(encoding="utf-8") == INDEX.read_text(encoding="utf-8")
     manifest = json.loads((tmp_path / "site-manifest.json").read_text(encoding="utf-8"))
     assert set(manifest["files"]) == set(files)
