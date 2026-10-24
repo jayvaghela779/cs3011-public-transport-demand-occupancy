@@ -179,13 +179,13 @@ def bootstrap_wape_diff(short: str, a: str, b: str, n_boot: int = 2000, seed: in
             "clusters": int(len(g))}
 
 
-def coverage_by_segment() -> dict:
-    """80% interval coverage on the test weeks, split by period of day and by
-    weekday/weekend, recomputed from the committed prediction files."""
+def coverage_by_segment(split: str = "test") -> dict:
+    """80% interval coverage on the test (or validation) weeks, split by period
+    of day and by weekday/weekend, recomputed from the committed prediction files."""
     from transit.models.run import period_of
     out = {}
     for short in ("demand", "load"):
-        d = pd.read_parquet(PRED / f"{short}_test.parquet")
+        d = pd.read_parquet(PRED / f"{short}_{split}.parquet")
         d = d[d["target"].notna()]
         inside = (d["target"] >= d["lo"]) & (d["target"] <= d["hi"])
         by = {"period": period_of(d["service_hour"]),
@@ -275,13 +275,15 @@ def main() -> None:
         return "\n".join(rows)
 
     cov = coverage_by_segment()
+    cov_valid = coverage_by_segment("valid")
     cov_rows = ["| Target | All | " + " | ".join(PERIOD_ORDER) + " | Weekday | Weekend |",
                 "| --- " * (len(PERIOD_ORDER) + 4) + "|"]
-    for short in ("demand", "load"):
-        c = cov[short]
-        cov_rows.append(f"| {short} | {pct(c['all'])} | " + " | ".join(pct(c["period"].get(k, float("nan")))
-                                                                     for k in PERIOD_ORDER)
-                        + f" | {pct(c['day']['weekday'])} | {pct(c['day']['weekend'])} |")
+    for label, cv in (("test", cov), ("validation", cov_valid)):
+        for short in ("demand", "load"):
+            c = cv[short]
+            cov_rows.append(f"| {short} ({label}) | {pct(c['all'])} | "
+                            + " | ".join(pct(c["period"].get(k, float("nan"))) for k in PERIOD_ORDER)
+                            + f" | {pct(c['day']['weekday'])} | {pct(c['day']['weekend'])} |")
     plan = planning_topk()
     (REPORTS / "planning.json").write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
     plan_rows = "\n".join(f"| {k} | {pct(v['ensemble'])} | {pct(v['hist_average'])} | {pct(v['seasonal_naive'])} |"
@@ -402,11 +404,17 @@ just above zero. Intervals are wide for busy route-hours (mean width about 60 bo
 uncertainty of an hourly route forecast.
 
 Calibrated coverage by period of day and day type (recomputed from the prediction files). The 80% target is a
-long-run rate over many route-hours; it is not guaranteed for any one route or hour.
+long-run rate over many route-hours; it is not guaranteed for any one route or hour. Validation rows are shown
+because the conformal margin was set on that week.
 
 {chr(10).join(cov_rows)}
 
 {(chr(10) * 2).join(f"Lowest {short} coverage: {c['worst_period']['period']} ({c['worst_period']['rows']:,} rows, mean width {c['worst_period']['mean_width']:.1f}); {pct(c['worst_period']['below'])} of actual values fall below the interval and {pct(c['worst_period']['above'])} above it." for short, c in cov.items())}
+
+The night gap for estimated load was already visible in the validation week ({pct(cov_valid['load']['period'].get('night 00-02', float('nan')))}),
+so it is a property of the method, not of the test weeks. It was noticed only after the test scoring, so it has not been
+"fixed" on these numbers. A fix would calibrate a separate conformal margin per period on the validation week and would
+count as a third look at the test weeks (decision D13).
 
 ## Crowding levels and capacity sensitivity (test)
 

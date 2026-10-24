@@ -8,6 +8,7 @@ Newest first. Each entry records what was decided, why, and what it rules out.
 - **Why:** planners need a range, not just a point. Raw quantile models are often miscalibrated on new weeks, so the margin is set on validation only.
 - **Caveat:** validation is used both for early stopping of the quantile models and for the margin, so calibration is not perfectly independent. Test coverage is reported as the honest check.
 - **Point forecasts unchanged:** adding intervals does not change any point forecast or point metric; the rerun reproduces them exactly.
+- **Known gap (found 24 Oct, review 4):** coverage is close to 80% in every period for demand, but estimated-load intervals cover only about half of night hours (00:00–02:00) in both the validation and the test weeks (RESULTS.md). It was found after the test scoring, so it is reported, not tuned away. The candidate fix is a separate conformal margin per period, set on validation; adopting it would be a third look at the test weeks and needs a team decision.
 
 ## D12. Final forecast is a validation-chosen blend; the test weeks were scored twice (24 Oct 2026)
 

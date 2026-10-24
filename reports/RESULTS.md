@@ -153,16 +153,24 @@ just above zero. Intervals are wide for busy route-hours (mean width about 60 bo
 uncertainty of an hourly route forecast.
 
 Calibrated coverage by period of day and day type (recomputed from the prediction files). The 80% target is a
-long-run rate over many route-hours; it is not guaranteed for any one route or hour.
+long-run rate over many route-hours; it is not guaranteed for any one route or hour. Validation rows are shown
+because the conformal margin was set on that week.
 
 | Target | All | early 03-05 | am peak 06-08 | midday 09-15 | pm peak 16-19 | evening 20-23 | night 00-02 | Weekday | Weekend |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| demand | 80.39% | 79.21% | 79.44% | 81.36% | 80.64% | 79.13% | 84.26% | 80.82% | 79.18% |
-| load | 79.30% | 79.14% | 79.79% | 80.30% | 80.51% | 78.02% | 52.11% | 79.75% | 78.02% |
+| demand (test) | 80.39% | 79.21% | 79.44% | 81.36% | 80.64% | 79.13% | 84.26% | 80.82% | 79.18% |
+| load (test) | 79.30% | 79.14% | 79.79% | 80.30% | 80.51% | 78.02% | 52.11% | 79.75% | 78.02% |
+| demand (validation) | 80.32% | 81.23% | 82.65% | 80.36% | 79.52% | 78.39% | 82.77% | 80.20% | 80.69% |
+| load (validation) | 80.38% | 81.44% | 83.06% | 81.89% | 79.99% | 77.66% | 49.86% | 80.21% | 80.85% |
 
 Lowest demand coverage: evening 20-23 (22,401 rows, mean width 30.2); 10.45% of actual values fall below the interval and 10.42% above it.
 
 Lowest load coverage: night 00-02 (2,157 rows, mean width 4.6); 39.96% of actual values fall below the interval and 7.93% above it.
+
+The night gap for estimated load was already visible in the validation week (49.86%),
+so it is a property of the method, not of the test weeks. It was noticed only after the test scoring, so it has not been
+"fixed" on these numbers. A fix would calibrate a separate conformal margin per period on the validation week and would
+count as a third look at the test weeks (decision D13).
 
 ## Crowding levels and capacity sensitivity (test)
 

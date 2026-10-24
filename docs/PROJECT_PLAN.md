@@ -75,6 +75,7 @@ The Victoria train-count dataset is a stretch goal only if the core is finished 
 - [ ] **All:** each member runs `pytest` and the app on their own laptop before 1 Nov
 - [ ] **All:** code freeze at the end of 31 Oct; rehearsals 1–2 Nov
 - [ ] **Team decision:** a licence for our own code (MIT proposed)
+- [ ] **Team decision (optional):** fix the night-time load interval gap with a per-period conformal margin (D13). It would mean a third, disclosed look at the test weeks; leaving it as a reported limitation is also fine
 
 ### How the work was done
 
