@@ -73,3 +73,13 @@ def test_interval_coverage_matches_prediction_files(short):
     s = df[df["target"].notna()]
     inside = ((s["target"] >= s["lo"]) & (s["target"] <= s["hi"])).mean()
     assert inside == pytest.approx(m["intervals"]["test_calibrated"]["coverage"], rel=1e-12)
+
+
+def test_planning_precision_matches_prediction_files():
+    from transit.crowding import crowding_level
+    plan = json.loads((config.ROOT / "reports" / "planning.json").read_text(encoding="utf-8"))
+    d = pd.read_parquet(config.DATA_DIR / "predictions" / "load_test.parquet")
+    d = d[d["target"].notna()].copy()
+    d["hi"] = crowding_level(d["target"], plan["capacity"]) == "high"
+    p50 = sum(g.nlargest(50, "ensemble")["hi"].mean() for _, g in d.groupby("service_date")) / d["service_date"].nunique()
+    assert p50 == pytest.approx(plan["precision_at_k"]["50"]["ensemble"], rel=1e-12)

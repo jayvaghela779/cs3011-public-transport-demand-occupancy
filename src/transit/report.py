@@ -179,6 +179,23 @@ def bootstrap_wape_diff(short: str, a: str, b: str, n_boot: int = 2000, seed: in
             "clusters": int(len(g))}
 
 
+def planning_topk(ks=(25, 50, 100), capacity: float = 70.0) -> dict:
+    """Daily alert list: each test day, take the K route-hours with the highest
+    forecast estimated load; precision = share that were actually high crowding
+    (load >= 80% of capacity). Averaged over the 14 test days."""
+    from transit.crowding import crowding_level
+    d = pd.read_parquet(PRED / "load_test.parquet")
+    d = d[d["target"].notna()].copy()
+    d["actual_high"] = crowding_level(d["target"], capacity) == "high"
+    out = {"capacity": capacity, "median_actual_high_per_day": int(d.groupby("service_date")["actual_high"].sum().median()),
+           "precision_at_k": {}}
+    for k in ks:
+        out["precision_at_k"][str(k)] = {
+            p: float(np.mean([g.nlargest(k, p)["actual_high"].mean() for _, g in d.groupby("service_date")]))
+            for p in ("ensemble", "seasonal_naive", "hist_average")}
+    return out
+
+
 def main() -> None:
     m = json.loads((REPORTS / "metrics.json").read_text(encoding="utf-8"))
     FIG.mkdir(parents=True, exist_ok=True)
@@ -234,6 +251,10 @@ def main() -> None:
                         f"{pct(r['share_negative'])} |")
         return "\n".join(rows)
 
+    plan = planning_topk()
+    (REPORTS / "planning.json").write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
+    plan_rows = "\n".join(f"| {k} | {pct(v['ensemble'])} | {pct(v['hist_average'])} | {pct(v['seasonal_naive'])} |"
+                           for k, v in plan["precision_at_k"].items())
     hist = m.get("test_scoring_history", [])
     hist_txt = "\n".join(
         f"- **{h['version']}** ([file](../{h['file']})): demand test WAPE LightGBM {pct(h['test_wape']['demand']['model'])}, "
@@ -365,6 +386,16 @@ Base case (ônibus básico, 70) confusion matrix for the final forecast (rows ac
 | actual low | {cm[0][0]:,} | {cm[0][1]:,} | {cm[0][2]:,} |
 | actual medium | {cm[1][0]:,} | {cm[1][1]:,} | {cm[1][2]:,} |
 | actual high | {cm[2][0]:,} | {cm[2][1]:,} | {cm[2][2]:,} |
+
+## Planning use: a daily crowding alert list (test)
+
+Each test day, a planner checks the K route-hours with the highest forecast estimated load. Precision is the share
+that really were high crowding (estimated load ≥ 80% of a 70-passenger bus), averaged over the 14 test days. The
+median test day had {plan['median_actual_high_per_day']} high route-hours.
+
+| K per day | Final forecast | Historical average | Same hour last week |
+| --- | --- | --- | --- |
+{plan_rows}
 
 ## Check: metrics recomputed from the committed prediction files
 

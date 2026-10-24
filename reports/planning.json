@@ -1,0 +1,21 @@
+{
+  "capacity": 70.0,
+  "median_actual_high_per_day": 580,
+  "precision_at_k": {
+    "25": {
+      "ensemble": 0.9600000000000001,
+      "seasonal_naive": 0.8371428571428572,
+      "hist_average": 0.9400000000000002
+    },
+    "50": {
+      "ensemble": 0.9214285714285716,
+      "seasonal_naive": 0.7857142857142858,
+      "hist_average": 0.9142857142857144
+    },
+    "100": {
+      "ensemble": 0.8707142857142857,
+      "seasonal_naive": 0.7435714285714285,
+      "hist_average": 0.875
+    }
+  }
+}

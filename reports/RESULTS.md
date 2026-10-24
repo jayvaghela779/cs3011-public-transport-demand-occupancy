@@ -174,6 +174,18 @@ Base case (ônibus básico, 70) confusion matrix for the final forecast (rows ac
 | actual medium | 6,950 | 15,223 | 1,062 |
 | actual high | 282 | 2,307 | 4,046 |
 
+## Planning use: a daily crowding alert list (test)
+
+Each test day, a planner checks the K route-hours with the highest forecast estimated load. Precision is the share
+that really were high crowding (estimated load ≥ 80% of a 70-passenger bus), averaged over the 14 test days. The
+median test day had 580 high route-hours.
+
+| K per day | Final forecast | Historical average | Same hour last week |
+| --- | --- | --- | --- |
+| 25 | 96.00% | 94.00% | 83.71% |
+| 50 | 92.14% | 91.43% | 78.57% |
+| 100 | 87.07% | 87.50% | 74.36% |
+
 ## Check: metrics recomputed from the committed prediction files
 
 | Target | Method | Rows | WAPE | Matches metrics.json |

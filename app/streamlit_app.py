@@ -276,8 +276,12 @@ def page_forecast(metrics: dict) -> None:
         ["route", "direction", "Hour", "demand_forecast", "load_forecast"]].head(25)
     show.columns = ["Route", "Dir", "Hour", "Boardings forecast", "Est. peak load forecast"]
     st.dataframe(show.round(1), hide_index=True, width="stretch")
-    st.caption("Use: these are the hours to check first for extra trips or larger vehicles. Validated "
-               "precision and recall of the high level are on the Crowding page.")
+    plan_file = ROOT / "reports" / "planning.json"
+    if plan_file.exists():
+        plan = json.loads(plan_file.read_text(encoding="utf-8"))["precision_at_k"]["50"]
+        st.caption(f"Use: these are the hours to check first for extra trips or larger vehicles. On the test weeks, "
+                   f"{fmt_pct(plan['ensemble'])} of the daily top-50 flagged route-hours really were high crowding "
+                   f"(last-week rule: {fmt_pct(plan['seasonal_naive'])}; capacity 70).")
     options = (f.groupby(["route", "direction"])["demand_forecast"].sum().sort_values(ascending=False))
     choice = st.selectbox("Route · direction", [f"{r} · {d}" for r, d in options.index])
     r, d = [x.strip() for x in choice.split("·")]
