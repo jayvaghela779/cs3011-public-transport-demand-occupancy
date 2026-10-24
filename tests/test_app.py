@@ -37,6 +37,37 @@ def test_explorer_route_and_split_selection():
     assert not at.exception
 
 
+def test_other_widgets_rerun_cleanly():
+    """Capacity sliders, the error-breakdown switch and the scenario selector."""
+    from streamlit.testing.v1 import AppTest
+    at = AppTest.from_file(APP, default_timeout=120)
+    at.run()
+    at.select_slider[0].set_value("articulado").run()
+    assert not at.exception
+    at.sidebar.radio[0].set_value("Model comparison").run()
+    at.radio[0].set_value("load").run()
+    assert not at.exception
+    at.sidebar.radio[0].set_value("Crowding and capacity").run()
+    at.selectbox[0].set_value("midionibus").run()
+    assert not at.exception
+    at.sidebar.radio[0].set_value("Next-day forecast").run()
+    at.select_slider[0].set_value("midionibus").run()
+    at.selectbox[0].set_value(at.selectbox[0].options[3]).run()
+    assert not at.exception
+
+
+def test_design_stylesheet_embeds_the_fonts():
+    import sys
+    sys.path.insert(0, str(config.ROOT / "app"))
+    try:
+        import design
+    finally:
+        sys.path.pop(0)
+    css = design.stylesheet()
+    assert css.count("@font-face") == 3 and "data:font/woff2;base64," in css
+    assert "fonts.googleapis" not in css      # works offline
+
+
 @pytest.mark.parametrize("short", ["demand", "load"])
 def test_reported_test_metrics_match_prediction_files(short):
     m = json.loads(METRICS.read_text(encoding="utf-8"))["targets"][short]["test"]

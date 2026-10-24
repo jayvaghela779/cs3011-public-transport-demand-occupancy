@@ -121,13 +121,14 @@ data/processed/       route-hour table and quality report
 data/predictions/     validation, test and next-day predictions used by the report and the app
 reports/              metrics.json, RESULTS.md, figures, archived first test scoring, project report
 src/transit/          project code (installed as the `transit` package)
-app/                  Streamlit dashboard
+app/                  Streamlit dashboard (design.py: look and fonts)
 tests/                pytest tests
 ```
 
 ## How this project uses outside work
 
 - **Data:** SUNT, used under CC BY 4.0 with attribution. Derived files state what we changed.
+- **Fonts:** the dashboard bundles Newsreader and Overpass from the [Fontsource](https://fontsource.org) packages, both under the SIL Open Font License 1.1 (licence texts in `app/fonts/`).
 - **Ideas, not code:** we studied the SUNT examples repository, an Aarhus University thesis on passenger forecasting, and published bus-occupancy studies. Repositories without a licence are read and cited, never copied.
 - **AI assistance:** the code and documents in this repository were written in AI-assisted sessions with Claude (Anthropic), directed and reviewed by Jay. Every such commit carries a `Co-Authored-By` line; as of 24 Oct 2026 that is every commit. Teammates' own reviews and changes are committed from their own accounts.
 

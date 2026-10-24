@@ -245,13 +245,14 @@ All of this runs inside `python -m transit.models.run` (about 8 minutes on 2 CPU
 
 - **Command:** `streamlit run app/streamlit_app.py`. It reads only committed files, so it starts offline with no download.
 - **Public copy:** the same file runs in the browser at https://jayvaghela779.github.io/cs3011-public-transport-demand-occupancy/ (GitHub Pages). `web/index.html` loads it with stlite (Streamlit on Pyodide), fetches the app code and committed results through jsDelivr's mirror of the `gh-pages` branch, checks each file's SHA-256 against `site-manifest.json`, and falls back to GitHub Pages for any mismatching copy. `.github/workflows/pages.yml` runs `web/build_site.py` to publish it. `tests/test_web.py` fails if the page's file list misses anything the app reads.
+- **Look:** `app/design.py` holds the presentation only: colours, the two bundled fonts (Newsreader and Overpass, SIL Open Font License, embedded so the local app looks the same offline), the page CSS, one Plotly template and small HTML helpers for headings, figure rows and the publication-style tables. It reads no results; the pages pass in values they loaded. The theme colours are repeated in `.streamlit/config.toml` (local) and `web/index.html` (public build); `tests/test_web.py` checks the two agree.
 - **Loading:** `load_metrics()` and `load_predictions(name)` are wrapped in `@st.cache_data`, so files are read once per session.
 - **Pages** (chosen in `main()` from the sidebar):
-  - `page_explorer`: pick period (test or validation), route-direction (busiest first, from `route_options`) and day. `day_chart` draws actual, final forecast, last-week rule and the 80% band; open circles are missing records (predicted, not scored). The **capacity slider** (`streamlit_app.py:124`) draws the medium/high threshold lines and recolours the crowding strip.
+  - `page_explorer`: pick period (test or validation), route-direction (busiest first, from `route_options`) and day. `day_chart` draws actual, final forecast, last-week rule and the 80% band; open circles are missing records (predicted, not scored). The **capacity slider** (`streamlit_app.py:190`) draws the medium/high threshold lines and recolours the crowding strip.
   - `page_comparison`: the test metrics table (`metrics_table`), a live recompute check, error breakdowns, tuning results, ablation, feature importance.
   - `page_crowding`: every capacity scenario, a confusion matrix, burst hours.
   - `page_forecast`: the 29 Apr forecast, the top high-crowding route-hours and the alert-list precision from `planning.json`. It is labelled as a demonstration, not an evaluated result.
-  - `page_data`: data source, split, the estimated-load caveat (`ESTIMATE_NOTE`), D8, D9, bursts, capacity, interval gap.
+  - `page_data`: data source, split, the estimated-load caveat (`ESTIMATE_LEAD`, `ESTIMATE_REST`), D8, D9, bursts, capacity, interval gap.
 - **Tests:** `tests/test_app.py::test_page_renders` runs every page with Streamlit's `AppTest` and fails on any exception; `test_explorer_route_and_split_selection`.
 - **Idea to explain:** the dashboard does no modelling. It displays the committed predictions and recomputes simple things (WAPE for one day, crowding levels for a chosen capacity) on the fly.
 
@@ -459,7 +460,7 @@ len(c), c.boardings.mean()
 
 <details><summary><b>D1. Explain the capacity slider on the Forecast explorer page. Does moving it re-run the model?</b></summary>
 
-**Expected:** `st.select_slider` at `streamlit_app.py:124` picks a scenario from `CAPACITY_SCENARIOS` (40, 70, 80, 100). The chosen capacity `cap` is used in two places only: `day_chart(..., capacity=cap)` draws dashed lines at 0.5 × cap and 0.8 × cap (`streamlit_app.py:96-99`), and the crowding strip recomputes `crowding_level(target, cap)` and `crowding_level(ensemble, cap)` (`streamlit_app.py:142`). **No model is re-run;** the load forecast is fixed. Only the labels change.
+**Expected:** `st.select_slider` at `streamlit_app.py:190` picks a scenario from `CAPACITY_SCENARIOS` (40, 70, 80, 100). The chosen capacity `cap` is used in two places only: `day_chart(..., capacity=cap)` draws dashed lines at 0.5 × cap and 0.8 × cap (`streamlit_app.py:143-147`), and the crowding strip recomputes `crowding_level(target, cap)` and `crowding_level(ensemble, cap)` (`streamlit_app.py:197`). **No model is re-run;** the load forecast is fixed. Only the labels change.
 
 Concrete case (route 137 I, Wed 17 Apr, 09:00, forecast estimated load 39.6): capacity 40 → load factor 0.99 → high; 70 → 0.57 → medium; 80 → 0.495 → low; 100 → low. The same forecast is "high" or "low" depending only on the bus you assume, which is exactly why results are reported for all four capacities.
 </details>
@@ -471,7 +472,7 @@ Concrete case (route 137 I, Wed 17 Apr, 09:00, forecast estimated load 39.6): ca
 
 <details><summary><b>D3. What do the open circles on the explorer chart mean?</b></summary>
 
-**Expected:** `day_chart` plots rows with `status != "observed"` as open grey circles labelled "No SUNT record (not scored)" (`streamlit_app.py:93-95`). These are missing records: hours the route regularly runs but SUNT has no data for that day. They have a forecast but no actual, and are never scored (D8).
+**Expected:** `day_chart` plots rows with `status != "observed"` as open grey circles labelled "No SUNT record (not scored)" (`streamlit_app.py:139-142`). These are missing records: hours the route regularly runs but SUNT has no data for that day. They have a forecast but no actual, and are never scored (D8).
 </details>
 
 <details><summary><b>D4. On the Next-day forecast page, where does "92.1% of the daily top-50 flagged route-hours" come from, and why is the page labelled a demonstration?</b></summary>

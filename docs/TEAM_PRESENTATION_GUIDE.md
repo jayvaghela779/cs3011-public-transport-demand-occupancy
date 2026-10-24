@@ -196,7 +196,7 @@ Deeper answers for all sections: [VIVA_QUESTION_BANK.md](VIVA_QUESTION_BANK.md).
 ### What to say (under 3 minutes)
 
 - "This dashboard runs on this laptop from the committed result files. It needs no download and no internet, and it shows exactly the numbers we evaluated."
-- **Forecast explorer.** "Here is route 137 on Wednesday 17 April. The dark line is what happened; blue is our forecast; the dotted orange line is last week's rule; the shaded band is the 80% interval. Below is the estimated load, with lines at 50% and 80% of the bus capacity."
+- **Forecast explorer.** "Here is route 137 on Wednesday 17 April. The dark line is what happened; teal is our forecast; the dotted amber line is last week's rule; the shaded band is the 80% interval. Below is the estimated load, with lines at 50% and 80% of the bus capacity."
 - **Capacity.** "If I change the bus size from 70 to 40 seats, the crowding strip turns more red. The crowding level depends on an assumption about the bus, which is why we report four sizes."
 - **Model comparison.** "These are the test-week tables. If I open this check, it recomputes every WAPE from the saved predictions; they all match."
 - **Next-day forecast.** "This is a genuine forecast for 29 April, the day after our data ends. It lists the hours most likely to be crowded. It has no actuals, so it is a demonstration, not an evaluated result."

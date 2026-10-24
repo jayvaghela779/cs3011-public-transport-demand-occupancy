@@ -57,6 +57,7 @@ src/transit/
   report.py           RESULTS.md and figures
   verify.py           compare a rerun with the committed table and metrics
 app/streamlit_app.py  dashboard
+app/design.py         dashboard look: colours, bundled fonts, CSS, chart template
 web/                  public in-browser build (index.html, build_site.py, wheels.txt)
 ```
 

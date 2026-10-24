@@ -2,3 +2,29 @@
 # Do not send anonymous usage statistics to Streamlit (also avoids failed
 # network calls when the demo runs offline).
 gatherUsageStats = false
+
+[client]
+# Hide the "Deploy" button and developer menu entries during the demo
+# (the public build in web/index.html uses the same mode).
+toolbarMode = "viewer"
+
+# Theme for the dashboard. The page CSS and fonts are in app/design.py.
+# web/index.html repeats these values for the in-browser build;
+# tests/test_web.py checks that the two copies agree.
+[theme]
+base = "light"
+primaryColor = "#0B6E69"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F3F5F7"
+textColor = "#17212B"
+linkColor = "#0B6E69"
+borderColor = "#DCE1E6"
+showWidgetBorder = true
+baseRadius = "6px"
+font = "Overpass, Segoe UI, system-ui, sans-serif"
+headingFont = "Newsreader, Georgia, serif"
+dataframeHeaderBackgroundColor = "#F3F5F7"
+
+[theme.sidebar]
+backgroundColor = "#F3F5F7"
+secondaryBackgroundColor = "#FFFFFF"
