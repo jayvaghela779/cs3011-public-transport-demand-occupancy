@@ -27,6 +27,15 @@ NAMES = {"ensemble": "Final: LightGBM + historical average", "model": "LightGBM 
          "seasonal_naive": "Same hour last week",
          "dow4_mean": "Mean of last 4 same weekdays", "hist_average": "Historical average"}
 ORDER = ["ensemble", "model", "seasonal_naive", "dow4_mean", "hist_average"]
+PERIOD_ORDER = ["early 03-05", "am peak 06-08", "midday 09-15", "pm peak 16-19", "evening 20-23", "night 00-02"]
+SEG_LABELS = {"True": "regular cell", "False": "non-regular cell"}
+
+
+def ordered(keys) -> list:
+    keys = list(keys)
+    if set(keys) <= set(PERIOD_ORDER):
+        return [k for k in PERIOD_ORDER if k in keys]
+    return keys
 COL = {"ensemble": "#1d4ed8", "model": "#60a5fa", "seasonal_naive": "#d97706", "dow4_mean": "#059669", "hist_average": "#7c3aed"}
 
 
@@ -61,7 +70,7 @@ def fig_wape(metrics: dict) -> None:
 
 def fig_periods(metrics: dict) -> None:
     seg = metrics["targets"]["demand"]["segments_test"]["period"]
-    cats = list(seg["ensemble"])
+    cats = ordered(seg["ensemble"])
     x = np.arange(len(cats))
     fig, ax = plt.subplots(figsize=(9, 3.4))
     for i, k in enumerate(("ensemble", "seasonal_naive")):
@@ -170,6 +179,23 @@ def bootstrap_wape_diff(short: str, a: str, b: str, n_boot: int = 2000, seed: in
             "clusters": int(len(g))}
 
 
+def planning_topk(ks=(25, 50, 100), capacity: float = 70.0) -> dict:
+    """Daily alert list: each test day, take the K route-hours with the highest
+    forecast estimated load; precision = share that were actually high crowding
+    (load >= 80% of capacity). Averaged over the 14 test days."""
+    from transit.crowding import crowding_level
+    d = pd.read_parquet(PRED / "load_test.parquet")
+    d = d[d["target"].notna()].copy()
+    d["actual_high"] = crowding_level(d["target"], capacity) == "high"
+    out = {"capacity": capacity, "median_actual_high_per_day": int(d.groupby("service_date")["actual_high"].sum().median()),
+           "precision_at_k": {}}
+    for k in ks:
+        out["precision_at_k"][str(k)] = {
+            p: float(np.mean([g.nlargest(k, p)["actual_high"].mean() for _, g in d.groupby("service_date")]))
+            for p in ("ensemble", "seasonal_naive", "hist_average")}
+    return out
+
+
 def main() -> None:
     m = json.loads((REPORTS / "metrics.json").read_text(encoding="utf-8"))
     FIG.mkdir(parents=True, exist_ok=True)
@@ -194,8 +220,8 @@ def main() -> None:
 
     def segtab(s):
         rows = ["| Segment | Rows | Final WAPE | Historical avg WAPE | Last-week WAPE |", "| --- | --- | --- | --- | --- |"]
-        for k in s["ensemble"]:
-            rows.append(f"| {k} | {s['ensemble'][k]['n']:,} | {pct(s['ensemble'][k]['wape'])} | "
+        for k in ordered(s["ensemble"]):
+            rows.append(f"| {SEG_LABELS.get(k, k)} | {s['ensemble'][k]['n']:,} | {pct(s['ensemble'][k]['wape'])} | "
                         f"{pct(s['hist_average'][k]['wape'])} | {pct(s['seasonal_naive'][k]['wape'])} |")
         return "\n".join(rows)
 
@@ -225,6 +251,10 @@ def main() -> None:
                         f"{pct(r['share_negative'])} |")
         return "\n".join(rows)
 
+    plan = planning_topk()
+    (REPORTS / "planning.json").write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
+    plan_rows = "\n".join(f"| {k} | {pct(v['ensemble'])} | {pct(v['hist_average'])} | {pct(v['seasonal_naive'])} |"
+                           for k, v in plan["precision_at_k"].items())
     hist = m.get("test_scoring_history", [])
     hist_txt = "\n".join(
         f"- **{h['version']}** ([file](../{h['file']})): demand test WAPE LightGBM {pct(h['test_wape']['demand']['model'])}, "
@@ -298,7 +328,7 @@ Route-directions with the largest total absolute error (final forecast):
 | --- | --- | --- | --- | --- |
 {chr(10).join(f"| {r['route']} | {r['direction']} | {int(r['rows'])} | {pct(r['wape'])} | {pct(r['share_of_total_error'])} |" for r in worst_rd)}
 
-Hours with zero recorded boardings ({zero.get('ensemble', {}).get('n', 0):,} test rows): model MAE
+Hours with zero recorded boardings ({zero.get('ensemble', {}).get('n', 0):,} test rows): final-forecast MAE
 {zero.get('ensemble', {}).get('mae', float('nan')):.2f}, last-week MAE {zero.get('seasonal_naive', {}).get('mae', float('nan')):.2f}.
 
 ![Example](figures/example_route_day.png)
@@ -324,6 +354,22 @@ Chosen on validation: {cfg(lod)}.
 | Without burst | {burst['ensemble']['False']['n']:,} | {burst['ensemble']['False']['mae']:.2f} | {pct(burst['ensemble']['False']['wape'])} | {burst['seasonal_naive']['False']['mae']:.2f} |
 | With burst | {burst['ensemble'].get('True', {}).get('n', 0):,} | {burst['ensemble'].get('True', {}).get('mae', float('nan')):.2f} | {pct(burst['ensemble'].get('True', {}).get('wape', float('nan')))} | {burst['seasonal_naive'].get('True', {}).get('mae', float('nan')):.2f} |
 
+## Prediction intervals (80%, test)
+
+Two quantile LightGBM models (10% and 90%), early-stopped on validation and refit on train + validation,
+then widened by a split-conformal margin computed on the validation week (decision D13).
+
+| Target | Raw coverage | Calibrated coverage | Mean width (calibrated) | Conformal margin |
+| --- | --- | --- | --- | --- |
+{chr(10).join(f"| {s} | {pct(m['targets'][s]['intervals']['test_raw']['coverage'])} | {pct(m['targets'][s]['intervals']['test_calibrated']['coverage'])} | {m['targets'][s]['intervals']['test_calibrated']['mean_width']:.1f} | {m['targets'][s]['intervals']['conformal_margin']:.2f} |" for s in ('demand', 'load') if 'intervals' in m['targets'][s])}
+
+Validation raw coverage: demand {pct(dem.get('intervals', {}).get('valid_raw', {}).get('coverage', float('nan')))},
+load {pct(lod.get('intervals', {}).get('valid_raw', {}).get('coverage', float('nan')))}. The raw quantile models were
+already close to 80% on validation, so the conformal margin is nearly zero. For demand, that tiny margin still moves
+about 1.5% of test hours inside the interval: almost all are hours with zero boardings whose raw lower bound sat
+just above zero. Intervals are wide for busy route-hours (mean width about 60 boardings), which is the honest
+uncertainty of an hourly route forecast.
+
 ## Crowding levels and capacity sensitivity (test)
 
 Capacity from {m['crowding']['source']}. Levels: low < {m['crowding']['thresholds_load_factor'][0]:.0%},
@@ -340,6 +386,16 @@ Base case (ônibus básico, 70) confusion matrix for the final forecast (rows ac
 | actual low | {cm[0][0]:,} | {cm[0][1]:,} | {cm[0][2]:,} |
 | actual medium | {cm[1][0]:,} | {cm[1][1]:,} | {cm[1][2]:,} |
 | actual high | {cm[2][0]:,} | {cm[2][1]:,} | {cm[2][2]:,} |
+
+## Planning use: a daily crowding alert list (test)
+
+Each test day, a planner checks the K route-hours with the highest forecast estimated load. Precision is the share
+that really were high crowding (estimated load ≥ 80% of a 70-passenger bus), averaged over the 14 test days. The
+median test day had {plan['median_actual_high_per_day']} high route-hours.
+
+| K per day | Final forecast | Historical average | Same hour last week |
+| --- | --- | --- | --- |
+{plan_rows}
 
 ## Check: metrics recomputed from the committed prediction files
 

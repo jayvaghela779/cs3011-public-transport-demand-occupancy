@@ -80,6 +80,11 @@ def day_chart(df: pd.DataFrame, value_name: str, capacity: float | None = None) 
     fig = go.Figure()
     obs = df[df["status"] == "observed"]
     miss = df[df["status"] != "observed"]
+    if {"lo", "hi"} <= set(df.columns):
+        fig.add_trace(go.Scatter(x=df["ts_hour"], y=df["hi"], mode="lines", line=dict(width=0),
+                                 showlegend=False, hoverinfo="skip"))
+        fig.add_trace(go.Scatter(x=df["ts_hour"], y=df["lo"], mode="lines", line=dict(width=0), fill="tonexty",
+                                 fillcolor="rgba(37,99,235,0.12)", name="80% interval (calibrated)"))
     fig.add_trace(go.Scatter(x=obs["ts_hour"], y=obs["target"], mode="lines+markers", name="Actual (SUNT)",
                              line=dict(color=COLOURS["target"], width=3)))
     for k in ("ensemble", "seasonal_naive"):
@@ -143,6 +148,11 @@ def page_explorer(metrics: dict) -> None:
         def colour(v):
             return f"background-color: {LEVEL_COLOURS.get(v, '#e5e7eb')}; color: white" if v else ""
         st.dataframe(show.style.map(colour), width="stretch")
+    iv = metrics["targets"]["demand"].get("intervals")
+    if iv:
+        st.caption(f"Shaded band: 80% prediction interval from quantile models, widened on the validation week. "
+                   f"Test coverage: {fmt_pct(iv['test_calibrated']['coverage'])} of actual demand values fall inside "
+                   f"(target 80%).")
     if (d1["status"] != "observed").any():
         st.caption("Open circles: hours this route normally runs but SUNT has no record that day. "
                    "They are treated as missing data, not zero demand, and are not scored (decision D8).")
@@ -175,7 +185,8 @@ def page_comparison(metrics: dict) -> None:
     c1, c2 = st.columns(2)
     for col, key, title in ((c1, "period", "WAPE by time of day"), (c2, "volume_tercile", "WAPE by route volume")):
         s = seg[key]
-        cats = list(s["ensemble"])
+        order = ["early 03-05", "am peak 06-08", "midday 09-15", "pm peak 16-19", "evening 20-23", "night 00-02"]
+        cats = [c for c in order if c in s["ensemble"]] if key == "period" else list(s["ensemble"])
         fig = go.Figure([go.Bar(name=NAMES[p], x=cats, y=[s[p][c]["wape"] for c in cats],
                                 marker_color=COLOURS[p]) for p in ("ensemble", "hist_average", "seasonal_naive")])
         fig.update_layout(barmode="group", height=320, title=title, yaxis_tickformat=".0%",
@@ -265,8 +276,12 @@ def page_forecast(metrics: dict) -> None:
         ["route", "direction", "Hour", "demand_forecast", "load_forecast"]].head(25)
     show.columns = ["Route", "Dir", "Hour", "Boardings forecast", "Est. peak load forecast"]
     st.dataframe(show.round(1), hide_index=True, width="stretch")
-    st.caption("Use: these are the hours to check first for extra trips or larger vehicles. Validated "
-               "precision and recall of the high level are on the Crowding page.")
+    plan_file = ROOT / "reports" / "planning.json"
+    if plan_file.exists():
+        plan = json.loads(plan_file.read_text(encoding="utf-8"))["precision_at_k"]["50"]
+        st.caption(f"Use: these are the hours to check first for extra trips or larger vehicles. On the test weeks, "
+                   f"{fmt_pct(plan['ensemble'])} of the daily top-50 flagged route-hours really were high crowding "
+                   f"(last-week rule: {fmt_pct(plan['seasonal_naive'])}; capacity 70).")
     options = (f.groupby(["route", "direction"])["demand_forecast"].sum().sort_values(ascending=False))
     choice = st.selectbox("Route · direction", [f"{r} · {d}" for r, d in options.index])
     r, d = [x.strip() for x in choice.split("·")]

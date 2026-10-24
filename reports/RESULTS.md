@@ -58,12 +58,12 @@ last week 25.68%. Blend weights tried on validation:
 
 | Segment | Rows | Final WAPE | Historical avg WAPE | Last-week WAPE |
 | --- | --- | --- | --- | --- |
-| am peak 06-08 | 21,333 | 15.75% | 15.65% | 19.82% |
 | early 03-05 | 9,318 | 13.80% | 13.99% | 17.34% |
-| evening 20-23 | 22,401 | 26.72% | 27.13% | 35.00% |
+| am peak 06-08 | 21,333 | 15.75% | 15.65% | 19.82% |
 | midday 09-15 | 45,682 | 19.15% | 19.37% | 25.90% |
-| night 00-02 | 2,237 | 82.58% | 83.03% | 102.69% |
 | pm peak 16-19 | 26,964 | 18.25% | 18.65% | 23.50% |
+| evening 20-23 | 22,401 | 26.72% | 27.13% | 35.00% |
+| night 00-02 | 2,237 | 82.58% | 83.03% | 102.69% |
 
 ![By period](figures/demand_wape_by_period.png)
 
@@ -83,8 +83,8 @@ Regular vs non-regular cells (non-regular = observed in an hour the route does n
 
 | Segment | Rows | Final WAPE | Historical avg WAPE | Last-week WAPE |
 | --- | --- | --- | --- | --- |
-| False | 2,254 | 55.83% | 58.26% | 69.16% |
-| True | 125,681 | 18.08% | 18.28% | 23.59% |
+| non-regular cell | 2,254 | 55.83% | 58.26% | 69.16% |
+| regular cell | 125,681 | 18.08% | 18.28% | 23.59% |
 
 Worst test day: 2024-04-21 (final WAPE 32.21%). Best: 2024-04-23
 (15.54%).
@@ -101,7 +101,7 @@ Route-directions with the largest total absolute error (final forecast):
 | 1007 | I | 278 | 14.15% | 0.59% |
 | 1007 | V | 276 | 16.02% | 0.57% |
 
-Hours with zero recorded boardings (5,165 test rows): model MAE
+Hours with zero recorded boardings (5,165 test rows): final-forecast MAE
 2.95, last-week MAE 2.81.
 
 ![Example](figures/example_route_day.png)
@@ -135,6 +135,23 @@ Chosen on validation: objective `regression_l1`, 63 leaves, 140 rounds.
 | Without burst | 127,409 | 4.67 | 19.24% | 6.19 |
 | With burst | 446 | 9.98 | 14.73% | 10.90 |
 
+## Prediction intervals (80%, test)
+
+Two quantile LightGBM models (10% and 90%), early-stopped on validation and refit on train + validation,
+then widened by a split-conformal margin computed on the validation week (decision D13).
+
+| Target | Raw coverage | Calibrated coverage | Mean width (calibrated) | Conformal margin |
+| --- | --- | --- | --- | --- |
+| demand | 78.93% | 80.39% | 59.6 | 0.00 |
+| load | 79.30% | 79.30% | 15.2 | 0.00 |
+
+Validation raw coverage: demand 79.21%,
+load 80.38%. The raw quantile models were
+already close to 80% on validation, so the conformal margin is nearly zero. For demand, that tiny margin still moves
+about 1.5% of test hours inside the interval: almost all are hours with zero boardings whose raw lower bound sat
+just above zero. Intervals are wide for busy route-hours (mean width about 60 boardings), which is the honest
+uncertainty of an hourly route forecast.
+
 ## Crowding levels and capacity sensitivity (test)
 
 Capacity from ABNT NBR 15570:2009, Table 1 (minimum capacity by vehicle class) and Table 2 (6 standing passengers per m2). Levels: low < 50%,
@@ -156,6 +173,18 @@ Base case (ônibus básico, 70) confusion matrix for the final forecast (rows ac
 | actual low | 93,779 | 4,168 | 38 |
 | actual medium | 6,950 | 15,223 | 1,062 |
 | actual high | 282 | 2,307 | 4,046 |
+
+## Planning use: a daily crowding alert list (test)
+
+Each test day, a planner checks the K route-hours with the highest forecast estimated load. Precision is the share
+that really were high crowding (estimated load ≥ 80% of a 70-passenger bus), averaged over the 14 test days. The
+median test day had 580 high route-hours.
+
+| K per day | Final forecast | Historical average | Same hour last week |
+| --- | --- | --- | --- |
+| 25 | 96.00% | 94.00% | 83.71% |
+| 50 | 92.14% | 91.43% | 78.57% |
+| 100 | 87.07% | 87.50% | 74.36% |
 
 ## Check: metrics recomputed from the committed prediction files
 

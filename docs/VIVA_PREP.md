@@ -70,7 +70,7 @@ Short answers every member should be able to give, with the evidence to point at
 - **Uncertain labels:** load is inferred, not observed, so even "actual" crowding is uncertain. That is why we never call it measured occupancy.
 - **Uncertain capacity:** results are reported under four capacities, not one.
 - **Uncertain improvement:** the bootstrap interval expresses our degree of belief that the blend beats the baseline, not just a single number.
-- **Possible extension:** quantile forecasts (for example a 10–90% band) would give planners a probability range rather than a point.
+- **Prediction intervals (done, D13):** two quantile models give a 10–90% band, calibrated on the validation week by conformal prediction. On test it contains 80.4% of actual demand values (target 80%). This is a degree of belief expressed as a range.
 
 ## 6. Who explains what (proposal; swap as agreed)
 

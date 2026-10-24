@@ -21,6 +21,7 @@ Day-ahead forecasts per route, direction and hour, scored on observed route-hour
 - **Against the usual baseline:** the final forecast cuts error by 23% versus "same hour last week".
 - **Against a strong baseline:** against the historical average the gain is small but consistent: −0.20 WAPE points for demand (95% bootstrap interval −0.29 to −0.06).
 - **LightGBM alone does not beat the historical average.** We report this as a finding (decision D12). The test weeks were scored twice, and both runs are disclosed.
+- **Uncertainty:** each forecast has an 80% prediction interval (quantile models plus conformal calibration on validation). It covers 80.4% of actual test demand and 79.3% of test load.
 - **Crowding levels** (load ÷ capacity: low < 50%, high ≥ 80%) for a standard 70-passenger bus: macro-F1 0.769. "High crowding" alerts are right 79% of the time and catch 61% of high hours. Results for 40, 80 and 100-passenger buses are in the results file.
 
 ## Team
@@ -52,7 +53,7 @@ Full provenance, licence and column definitions are in [docs/DATA.md](docs/DATA.
 
 ## Quick start
 
-Requires Python 3.10 or newer. Works in Google Colab, on Linux, and on Windows (PowerShell).
+Requires Python 3.10 or newer. Works in Google Colab, on Linux, and on Windows (PowerShell). Tested with Python 3.11, 3.12 (GitHub Actions) and 3.13; pandas 2.2 and 3.0; LightGBM 4.7, scikit-learn 1.9, Streamlit 1.66.
 
 ```bash
 git clone https://github.com/jayvaghela779/cs3011-public-transport-demand-occupancy.git
@@ -72,7 +73,7 @@ python -m transit.models.run
 # 4. Write reports/RESULTS.md and figures (stops if numbers disagree)
 python -m transit.report
 
-# 5. Run the tests (68), then the dashboard
+# 5. Run the tests, then the dashboard
 pytest
 streamlit run app/streamlit_app.py
 ```
@@ -81,7 +82,7 @@ The dashboard reads only committed files, so `pip install -r requirements.txt` a
 
 ## Deployment (free)
 
-On [Streamlit Community Cloud](https://share.streamlit.io): sign in with GitHub, choose **Create app**, pick this repository, branch `main`, main file `app/streamlit_app.py`, then deploy. The app sleeps after 12 hours without visitors; open it about 30 minutes before a demo to wake it. **Fallback:** run it locally with the command above. A recorded demo video is the last resort.
+On [Streamlit Community Cloud](https://share.streamlit.io): sign in with GitHub, choose **Create app**, pick this repository, branch `main`, main file `app/streamlit_app.py`, then deploy. The app sleeps after 12 hours without visitors; open it about 30 minutes before a demo to wake it. **Fallback:** run it locally with the command above. A recorded 68-second walkthrough of all five pages is the last resort; keep it on the demo laptop.
 
 Raw files are cached in `data/raw/` and are never committed.
 
