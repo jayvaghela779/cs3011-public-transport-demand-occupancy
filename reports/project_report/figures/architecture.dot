@@ -1,0 +1,28 @@
+// Source of figures/architecture.png. Render: dot -Tpng -Gdpi=200 architecture.dot -o architecture.png
+digraph pipeline {
+  rankdir=TB; nodesep=0.35; ranksep=0.32;
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=15, fillcolor="#eef2ff", color="#3b4a8c", penwidth=1.2, margin="0.18,0.08"];
+  edge [fontname="Courier", fontsize=13, color="#555555", fontcolor="#333333"];
+  raw   [label="SUNT OD files (GitHub, CC BY 4.0)\n59 daily parquet files, pinned commit", fillcolor="#f3f4f6"];
+  dl    [label="data/raw/sunt_od/  (not committed)\nevery file checked against its SHA-256"];
+  table [label="data/processed/route_hour.parquet\n541,611 route-hours + quality_report.json (6 checks)"];
+  slots [label="Modelling slots\nobserved | missing record (never scored)"];
+  feats [label="Day-ahead features\nonly days before D"];
+  models[label="Baselines + LightGBM\ntuned on validation week, refit on train + validation"];
+  blend [label="Final forecast = 0.5 LightGBM + 0.5 historical average\n80% intervals: quantile models + conformal margin"];
+  out   [label="data/predictions/*.parquet\nreports/metrics.json", fillcolor="#fef3c7", color="#92400e"];
+  rep   [label="RESULTS.md,\nfigures", fillcolor="#dcfce7", color="#166534"];
+  app   [label="Dashboard\n(offline)", fillcolor="#dcfce7", color="#166534"];
+  ver   [label="Rerun check\n(verify)", fillcolor="#dcfce7", color="#166534"];
+  raw -> dl [label=" transit.data.download"];
+  dl -> table [label=" transit.data.build"];
+  table -> slots [label=" service.build_slots"];
+  slots -> feats [label=" features.build_features"];
+  feats -> models [label=" transit.models.run"];
+  models -> blend;
+  blend -> out;
+  out -> rep [label=" report"];
+  out -> app [label=" streamlit"];
+  out -> ver;
+  {rank=same; rep; app; ver}
+}

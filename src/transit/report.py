@@ -60,9 +60,11 @@ def fig_wape(metrics: dict) -> None:
         vals = [t[k]["wape"] * 100 for k in ORDER]
         bars = ax.barh([NAMES[k] for k in ORDER][::-1], vals[::-1], color=[COL[k] for k in ORDER][::-1])
         ax.bar_label(bars, fmt="%.1f%%", padding=3)
-        ax.set_title(f"{title}: test WAPE (lower is better)", fontsize=11)
+        ax.set_title(title, fontsize=11)
+        ax.set_xlabel("Test WAPE (%)")
         ax.set_xlim(0, max(vals) * 1.25)
         ax.spines[["top", "right"]].set_visible(False)
+    fig.suptitle("Test weeks, 15-28 Apr 2024 (lower is better)", fontsize=11)
     fig.tight_layout()
     fig.savefig(FIG / "test_wape.png", dpi=160)
     plt.close(fig)
