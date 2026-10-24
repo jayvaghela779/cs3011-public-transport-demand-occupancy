@@ -22,13 +22,13 @@ Do not edit numbers here without checking them there first.
 
 **Group 52** · Domain: Machine Learning
 
-| Member | Planned module (project plan) |
+| Member | Presents and answers questions on (provisional) |
 | --- | --- |
-| Jay Pravin Vaghela (group lead) | Architecture, demand model, integration |
-| Akshar Jasoliya | Data pipeline |
-| Tirth Jasoliya | Occupancy model and evaluation |
-| Disha Khushalani | Streamlit dashboard |
-| Shivani Mahour | Presentation and documentation |
+| Jay Pravin Vaghela (group lead) | Framing, architecture, models and the blend decision |
+| Akshar Jasoliya | Data, licence, pipeline and quality rules |
+| Tirth Jasoliya | Evaluation protocol, results and error analysis |
+| Disha Khushalani | Dashboard demo and deployment |
+| Shivani Mahour | Crowding, capacity assumption and limitations |
 
 Report date: 24 October 2026
 
@@ -42,7 +42,7 @@ Data: Salvador Urban Network Transportation (SUNT) dataset, Ferreira et al. (202
 
 Bus operators plan frequencies and vehicle sizes from expected demand, but the passenger counts they need are rarely open. This project builds and evaluates a day-ahead forecasting system for public-transport **demand** (boardings per route, direction and hour) and **estimated on-board load** (our occupancy target), with crowding levels derived from the load forecast. We use the open, peer-reviewed SUNT dataset from Salvador, Brazil (CC BY 4.0): 59 days of fare-card and vehicle-location records (37.6 million stop events) aggregated to 541,611 route-hours. Alightings in SUNT are inferred by trip chaining, so load is an estimate, not a measurement.
 
-We compare LightGBM gradient-boosted trees with three baselines on a chronological split (train 1 March–7 April 2024, validation 8–14 April, test 15–28 April). The final forecast, an equal blend of LightGBM and a historical average with the weight chosen on validation, reaches a test weighted absolute percentage error (WAPE) of 18.15% for demand and 19.20% for estimated load. This is about 23% lower than the common "same hour last week" rule (23.67% and 25.39%), but only slightly better than a well-chosen historical average (18.35% and 19.35%; demand difference −0.20 points, 95% paired-bootstrap interval −0.29 to −0.06). Crowding levels for a 70-passenger bus reach a macro-F1 of 0.769, and between 0.683 and 0.772 across four capacity assumptions. Calibrated 80% prediction intervals cover 80.4% of test demand and 79.3% of test load, but only about 52% of night-time load values. The test weeks were scored twice, and both scorings are disclosed. Every number is produced by committed code; 85 automated tests and a verification command check that the results reproduce.
+We compare LightGBM gradient-boosted trees with three baselines on a chronological split (train 1 March–7 April 2024, validation 8–14 April, test 15–28 April). The final forecast, an equal blend of LightGBM and a historical average with the weight chosen on validation, reaches a test weighted absolute percentage error (WAPE) of 18.15% for demand and 19.20% for estimated load. This is about 23% lower than the common "same hour last week" rule (23.67% and 25.39%), but only slightly better than a well-chosen historical average (18.35% and 19.35%; demand difference −0.20 points, 95% paired-bootstrap interval −0.29 to −0.06), and only in absolute error: on RMSE the historical average is slightly better for demand. Crowding levels for a 70-passenger bus reach a macro-F1 of 0.769, and between 0.683 and 0.772 across four capacity assumptions. Calibrated 80% prediction intervals cover 80.4% of test demand and 79.3% of test load, but only about 52% of night-time load values. The test weeks were scored twice, and both scorings are disclosed. Every number is produced by committed code; 86 automated tests and a verification command check that the results reproduce.
 
 **Keywords:** public transport; passenger demand forecasting; estimated on-board load; crowding; smart-card (AFC) data; LightGBM; gradient boosting; conformal prediction; reproducibility.
 
@@ -93,7 +93,7 @@ Both targets are supervised regression problems; crowding is a classification de
 
 ## 2.1 Selection
 
-We needed open data with (i) passenger demand, (ii) some measure of how full vehicles are, (iii) at least several weeks of history, and (iv) a licence allowing reuse. Decision D1 in the repository records the comparison. Candidates included Victoria train counts, UrbanBus, TfNSW bus occupancy, TfL BUSTO, MTA hourly ridership, Trafiklab KoDa, Bengaluru metro (BMRCL) ridership and the repositories the team first collected (SUNT, the PMPML Pune GTFS generator, and an Aarhus University thesis repository). Timetable-only sources such as GTFS contain routes and schedules but no passenger counts, so they cannot provide training labels. The Indian sources we found had demand counts only (Bengaluru metro: hourly entries for about seven weeks) or nothing usable for tier-2 cities.
+We needed open data with (i) passenger demand, (ii) some measure of how full vehicles are, (iii) at least several weeks of history, and (iv) a licence allowing reuse. Decision D1 in the repository records the comparison. Candidates included Victoria train counts, UrbanBus, TfNSW bus occupancy, TfL BUSTO, MTA hourly ridership, Trafiklab KoDa, Bengaluru metro (BMRCL) ridership and the repositories the team first collected (SUNT, the PMPML Pune GTFS generator, and an Aarhus University thesis repository). Timetable-only sources such as GTFS contain routes and schedules but no passenger counts, so they cannot provide training labels. The Indian sources we found had demand counts only (Bengaluru metro: hourly entries for about seven weeks) or nothing usable for tier-2 cities. The Ahmedabad–Gandhinagar dataset on Mendeley Data infers crowdedness from the smartphone sensors of a few commuters and has no route-level counts; the team read its description but did not inspect its files.
 
 **SUNT** was the only candidate we could download and open that contained both boardings and an on-board load estimate, under an open licence and with a peer-reviewed description (Ferreira et al., 2025).
 
@@ -286,7 +286,7 @@ For actual values y and forecasts ŷ over n scored route-hours (sums run over th
 ## 5.4 Test-set disclosure: the test weeks were scored twice
 
 1. **First scoring (v1, LightGBM alone).** The first full run scored LightGBM alone. It beat "same hour last week" clearly but tied the historical average (demand test WAPE 18.39% against 18.35%; load 19.39% against 19.35%). The validation week had shown the same pattern. These results are kept in `reports/archive/metrics_v1_lightgbm_only.json`.
-2. **Diagnosis on validation only.** A history-length feature and a residual model on top of the historical average did not help on validation (`reports/archive/experiments_validation_v2.csv`).
+2. **Diagnosis on validation only** (`reports/archive/experiments_validation_v2.csv`). A history-length feature made demand worse (19.14% to 19.16% validation WAPE, against 18.84% for LightGBM alone). For demand, a model of the residual from the historical average was slightly better than LightGBM alone (18.69% to 18.82%), but it stopped after 11–31 boosting rounds, a sign that little signal remains beyond the weekly profile, and the simpler blend did better still (18.65%).
 3. **Second scoring (v2, the blend).** The blend weight was chosen on validation only and the blend was then scored once on test. These are the results reported in section 6.
 
 The blend was motivated by what the first test scoring showed, so the test weeks are not perfectly untouched. We report both scorings. No further changes were tested on the test weeks, and none were made for this report.
@@ -365,9 +365,9 @@ The largest shares of the final demand model's total split gain are `y_hist_dayt
 | Load | Same hour last week | −6.19 | −6.41 to −5.98 | 100.00% |
 | Load | LightGBM alone | −0.19 | −0.22 to −0.17 | 100.00% |
 
-**Interpretation.** Against the usual planning rule, "same hour last week", the final forecast is much better: about 23% lower WAPE for demand and 24% for estimated load, with intervals far from zero. Against the historical average the gain is **small**: 0.20 WAPE points for demand. The interval excludes zero, so the gain is consistent across routes, but it is too small to matter much in practice.
+**Interpretation.** Against the usual planning rule, "same hour last week", the final forecast is much better: about 23% lower WAPE for demand and 24% for estimated load, with intervals far from zero. Against the historical average the gain is **small**: 0.20 WAPE points for demand. The interval excludes zero, and the final forecast has the lower WAPE on 13 of the 14 test days for demand (12 of 14 for estimated load), so the gain is consistent; but it is too small to matter much in practice. It is also a gain in absolute error only: the model was tuned on absolute error, and on RMSE, which weights large errors more, the historical average is slightly better for demand (29.58 against 29.72; for load the final forecast is better, 6.90 against 6.96).
 
-The ablation and the feature importances explain why. Almost all of the model's skill comes from same-hour history, and a single feature, the historical average itself, carries more than 70% of the gain. Bus demand in Salvador in these weeks is dominated by a stable weekly profile per route and hour; once that profile is known, there is little left for a model to learn from the features we have. LightGBM alone did not beat the historical average on test. We report this as a finding rather than hiding it: a well-chosen simple baseline is hard to beat for hourly route demand, and claims of large ML gains should always be checked against one. Note also that these intervals measure variation across routes; they do not cover the extra uncertainty from the test weeks having been scored twice.
+The ablation and the feature importances explain why. Almost all of the model's skill comes from same-hour history, and a single feature, the historical average itself, carries more than 70% of the gain. Bus demand in Salvador in these weeks is dominated by a stable weekly profile per route and hour; once that profile is known, there is little left for a model to learn from the features we have. LightGBM alone did not beat the historical average on test. We report this as a finding rather than hiding it: a well-chosen simple baseline is hard to beat for hourly route demand, and claims of large ML gains should always be checked against one. Note also that the bootstrap resamples route-directions within the same 14 test days: its interval does not cover week-to-week or seasonal variation, nor the extra uncertainty from the test weeks having been scored twice.
 
 ## 6.4 Error analysis
 
@@ -404,7 +404,7 @@ On the 5,165 test hours with zero recorded boardings, the final forecast's MAE i
 
 ![Figure 5. Hourly boardings on the busiest test route-direction (route 137, direction I) on Wednesday 17 April 2024, against the final forecast and the last-week rule.](../figures/example_route_day.png){width=95%}
 
-Figure 5 shows one day of the busiest route-direction in the test weeks. Both forecasts follow the daily shape closely outside the morning peak. In the 06:00–08:00 peak the final forecast stays well below the actual values, while the last-week rule happens to be closer on this day. A single day cannot show which method is better overall; Tables 1 and 6 do that. The figure shows the typical shape and that the blend is conservative at the highest peaks.
+Figure 5 shows one day of the busiest route-direction in the test weeks. Both forecasts follow the daily shape closely outside the morning peak. In the 06:00–08:00 peak the final forecast stays well below the actual values, while the last-week rule happens to be closer on this day. The example is chosen by a fixed rule in the report generator (the busiest route-direction, on the first test Wednesday), not picked to flatter the model, and it happens to be unfavourable: 17 April is the only test day on which the final forecast's demand WAPE was higher than the historical average's (16.74% against 16.59%). A single day cannot show which method is better overall; Tables 1 and 6 do that. The figure shows the typical shape and that the blend is conservative at the highest peaks.
 
 # 7. Crowding classification and bus-capacity sensitivity
 
@@ -453,7 +453,7 @@ A planner cannot inspect thousands of route-hours a day. We therefore evaluated 
 | 50 | 92.14% | 91.43% | 78.57% |
 | 100 | 87.07% | 87.50% | 74.36% |
 
-For a daily list of 50 hours, 92.1% of the flagged hours were genuinely high crowding, against 78.6% with the last-week rule. The final forecast and the historical average are again close.
+For a daily list of 50 hours, 92.1% of the flagged hours were genuinely high crowding, against 78.6% with the last-week rule. The final forecast and the historical average are again close: their precision differs by at most 2.0 percentage points at K = 25, 50 or 100. The clear gain is over the last-week rule.
 
 # 8. Prediction intervals and uncertainty
 
@@ -506,7 +506,7 @@ python -m transit.data.build      # route-hour table, 6 quality checks
 python -m transit.models.run      # tune, evaluate, forecast (about 8 min)
 python -m transit.report          # RESULTS.md and figures
 python -m transit.verify          # compare with the committed results
-pytest                            # 85 tests
+pytest                            # 86 tests
 ```
 
 ## 9.2 Reproducibility (measured)
@@ -514,12 +514,12 @@ pytest                            # 85 tests
 - **Pinned inputs:** the SUNT download URL contains the exact commit, and every file is checked against its SHA-256.
 - **Deterministic training:** LightGBM runs with a fixed seed and its deterministic mode.
 - **Generated write-up:** `RESULTS.md` is generated from `metrics.json`; the generator recomputes every test WAPE from the prediction files and stops if any disagrees.
-- **Verification command:** `python -m transit.verify` compares a rebuilt route-hour table with the committed one cell by cell, and all 2,326 numbers in `metrics.json` with the committed file (relative tolerance 10⁻⁶; run times ignored).
+- **Verification command:** `python -m transit.verify` compares a rebuilt route-hour table with the committed one cell by cell, and all 2,326 numbers in `metrics.json` with the committed file (relative tolerance 10⁻⁶; run times ignored). It needs a git clone (not a ZIP download), because it compares against the files committed in git.
 - **Fresh-clone rerun (24 October 2026):** on Linux with Python 3.12.3, pandas 3.1.0 and LightGBM 4.7.0, a full rerun from a fresh clone downloaded all 59 files with matching checksums, rebuilt an identical table (541,611 × 12), reproduced all 2,326 values in `metrics.json` and all five prediction files exactly, and regenerated a byte-identical `RESULTS.md`. The whole sequence took about 11 minutes. The committed results were originally produced with Python 3.13 and pandas 3.0.5. The full pipeline has not yet been rerun on Windows or Google Colab; only the tests have.
 
 ## 9.3 Testing (measured)
 
-There are 85 automated tests (pytest). GitHub Actions runs them, followed by `python -m transit.verify`, on Ubuntu (Python 3.11 and 3.12) and on Windows (Python 3.12, with both the normal and the locked requirement files). The tests use small hand-written fixtures in the SUNT file format, not observations, except where they check the committed outputs.
+There are 86 automated tests (pytest). GitHub Actions runs them, followed by `python -m transit.verify`, on Ubuntu (Python 3.11 and 3.12) and on Windows (Python 3.12, with both the normal and the locked requirement files). The tests use small hand-written fixtures in the SUNT file format, not observations, except where they check the committed outputs.
 
 | Area | Test file | Tests | What they check |
 | --- | --- | --- | --- |
@@ -532,9 +532,9 @@ There are 85 automated tests (pytest). GitHub Actions runs them, followed by `py
 | Features and baselines | `test_features_and_baselines.py` | 8 | **no leakage**, exact lags, fallbacks, metric values, crowding levels |
 | Model run | `test_models_run.py` | 6 | complete results, documented blend, weight chosen on validation, beats last week on a learnable pattern |
 | Dashboard and outputs | `test_app.py` | 15 | every page renders; reported metrics, coverage and alert precision match the prediction files; missing records never scored |
-| Verification | `test_verify.py` | 6 | the comparison logic of `transit.verify` |
+| Verification | `test_verify.py` | 7 | the comparison logic of `transit.verify`, and a clear message when git is missing |
 
-On 24 October 2026 the suite passed (85 passed) and `python -m transit.verify` matched all 2,326 values.
+On 24 October 2026 the suite passed (86 passed) and `python -m transit.verify` matched all 2,326 values.
 
 ## 9.4 Dashboard
 
@@ -560,7 +560,7 @@ Changing the capacity on the explorer page does not re-run any model; it only mo
 4. **One city and 59 days.** All data is from Salvador, Brazil, March–April 2024. Nothing here is validated for Indian or tier-2 cities, or for other seasons.
 5. **No holiday in the test weeks.** Holiday behaviour is not tested.
 6. **Conditional forecast.** Forecasts assume the route runs in that hour; missing records are not scored, and cancellations are not predicted.
-7. **Small gain over a strong baseline.** The model's advantage over the historical average is 0.20 WAPE points for demand.
+7. **Small gain over a strong baseline.** The model's advantage over the historical average is 0.20 WAPE points for demand, in absolute error only (on RMSE the historical average is slightly better for demand). The bootstrap interval covers variation across routes within the 14 test days, not across weeks or seasons.
 8. **Test weeks scored twice.** Disclosed in section 5.4.
 9. **Night-time load intervals.** About 52% coverage instead of 80% (section 8.2).
 10. **Validation optimism.** Validation figures were used for selection and are optimistic; the test figures are the honest estimate.
@@ -574,7 +574,7 @@ Changing the capacity on the explorer page does not re-run any model; it only mo
 - **Automation bias.** The dashboard presents forecasts and crowding colours with an air of precision. Prediction intervals, the capacity selector and the caveats page are there so that users see uncertainty and assumptions, not just a single number. Night-time load ranges should not be trusted as 80% ranges.
 - **Transferability.** A model trained on Salvador should not be applied to other cities, including Indian cities, without retraining and validation on local data.
 - **Licensing and credit.** The data is used under CC BY 4.0 with attribution and a statement of changes. Repositories without a licence were read for ideas only and are cited, not copied.
-- **Use of AI assistance.** Parts of the code and documentation, including drafts of this report, were produced in AI-assisted sessions (Claude, Anthropic) directed by the team lead; commits that include such work carry a `Co-Authored-By` line. The team remains responsible for the content and must be able to explain it.
+- **Use of AI assistance.** The code and documents in the repository, including this report, were written in AI-assisted sessions with Claude (Anthropic), directed and reviewed by the group lead. Every such commit carries a `Co-Authored-By` line; as of 24 October 2026 that is every commit. The team remains responsible for the content and must be able to explain it.
 
 # 12. Future work (proposed; none of this has been done)
 
@@ -588,7 +588,7 @@ Changing the capacity on the explorer page does not re-run any model; it only mo
 
 # 13. Conclusion
 
-We built an end-to-end, reproducible system that forecasts day-ahead hourly boardings and estimated on-board load for every bus route-direction in Salvador, derives crowding levels under documented capacity assumptions, and presents the results in an offline dashboard. On two held-out weeks, the final forecast (an equal blend of LightGBM and a historical average) has a WAPE of 18.15% for demand and 19.20% for estimated load: about 23–24% better than the "same hour last week" rule, but only marginally better than a well-chosen historical average. Crowding levels for a standard bus reach a macro-F1 of 0.769, and a daily list of the 50 most crowded forecast hours is right 92.1% of the time.
+We built an end-to-end, reproducible system that forecasts day-ahead hourly boardings and estimated on-board load for every bus route-direction in Salvador, derives crowding levels under documented capacity assumptions, and presents the results in an offline dashboard. On two held-out weeks, the final forecast (an equal blend of LightGBM and a historical average) has a WAPE of 18.15% for demand and 19.20% for estimated load: about 23–24% better than the "same hour last week" rule, but only marginally better than a well-chosen historical average, and only in absolute error. Crowding levels for a standard bus reach a macro-F1 of 0.769, and a daily list of the 50 most crowded forecast hours is right 92.1% of the time.
 
 The most useful lesson is methodological. A strong, simple baseline captured almost all of the predictable structure, and only careful baselines, a validation-only selection protocol and a cluster bootstrap made that visible. We report the small gain, the second scoring of the test weeks, the dependence on an assumed capacity and the night-time interval gap as they are. Every number in this report can be traced to committed code, checked by automated tests and reproduced from a fresh clone.
 
@@ -608,9 +608,9 @@ The most useful lesson is methodological. A strong, simple baseline captured alm
 
 # Appendix A. Team and contributions
 
-The module ownership on the title page is the plan recorded in the repository (`README.md`, `docs/PROJECT_PLAN.md`); the plan states that it may change. The presentation responsibilities proposed in `docs/VIVA_PREP.md` are: Jay, problem framing, architecture and the model and blend decision; Akshar, data, licence, pipeline, quality checks and missing hours; Tirth, evaluation protocol, baselines, metrics, bootstrap and error analysis; Disha, dashboard walkthrough, deployment and local fallback; Shivani, crowding and capacity assumption, limitations and future work.
+The table on the title page is the provisional speaking split for the presentation and viva, as recorded in `README.md` and `docs/TEAM_PRESENTATION_GUIDE.md`. It is not a record of who wrote which code.
 
-As recorded in the project plan, the pipeline, models, dashboard and documents were built in AI-assisted sessions directed by the group lead. Teammates' own reviews, runs and edits are to be committed from their own accounts, so that the Git history shows each contribution. This report does not claim individual contributions beyond what the repository records.
+As recorded in the repository, the code and documents were written in AI-assisted sessions with Claude (Anthropic), directed and reviewed by the group lead, and every commit up to 24 October 2026 carries a `Co-Authored-By` line. Teammates' own reviews, runs and edits are to be committed from their own accounts, so that the Git history shows each contribution. This report does not claim individual contributions beyond what the repository records.
 
 # Appendix B. Decision log index
 

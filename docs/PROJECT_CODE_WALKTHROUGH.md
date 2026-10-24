@@ -4,6 +4,8 @@ A guided tour of the code, written for the five of us before the evaluation. It 
 
 The goal is understanding, not a script to memorise. If you can do the exercises for your part without looking at the answers, you can handle follow-up questions in the viva, because you will know *where to look* and *why the code does what it does*.
 
+This guide is about the **code**. It complements the other team documents rather than repeating them: what each speaker says is in [TEAM_PRESENTATION_GUIDE.md](TEAM_PRESENTATION_GUIDE.md), harder questions with short answers are in [VIVA_QUESTION_BANK.md](VIVA_QUESTION_BANK.md), and laptop setup and the demo script are in [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md).
+
 - Numbers quoted here come from `reports/RESULTS.md`, `reports/metrics.json` or the committed prediction files. The worked example in section 3 was traced on 24 Oct 2026 from the committed files on `main`.
 - Line numbers are given as `file.py:NN` for the state of `main` on 24 Oct 2026. If the code changes, search for the function name instead.
 - "Load" always means **estimated on-board load** (from SUNT's fare-card trip chaining), never measured occupancy.
@@ -26,8 +28,10 @@ git clone https://github.com/jayvaghela779/cs3011-public-transport-demand-occupa
 cd cs3011-public-transport-demand-occupancy
 pip install -r requirements.txt
 pip install -e .          # makes `import transit` work from anywhere
-pytest -q                 # 85 tests, about 10 seconds
+pytest -q                 # 86 tests, about 10 seconds
 ```
+
+If anything fails on Windows, [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md) has step-by-step setup and troubleshooting.
 
 You do **not** need to download SUNT (510 MB) to follow this guide. The route-hour table, the prediction files and `metrics.json` are committed, and every exercise below works from them. Only stage 1 (download) and stage 2 (build) need the raw files.
 
@@ -97,7 +101,7 @@ SUNT files ──download──▶ data/raw ──build──▶ route_hour.parq
 | `src/transit/report.py` | Writes `RESULTS.md`, the figures, the bootstrap and the alert-list evaluation |
 | `src/transit/verify.py` | Checks that a rerun matches the committed table and metrics |
 | `app/streamlit_app.py` | The dashboard |
-| `tests/` | 85 pytest tests (CI runs them on Ubuntu and Windows) |
+| `tests/` | 86 pytest tests (CI runs them on Ubuntu and Windows) |
 
 ---
 
@@ -231,7 +235,7 @@ All of this runs inside `python -m transit.models.run` (about 8 minutes on 2 CPU
   - `bootstrap_wape_diff(short, a, b)` (`report.py:163`) is a paired cluster bootstrap: it resamples whole route-directions (664 for demand) 2,000 times, because hours of the same route are correlated. It gives the 95% interval of the WAPE difference, e.g. −0.29 to −0.06 points for final minus historical average (demand).
   - `coverage_by_segment(split)` (`report.py:184`) splits interval coverage by period of day and weekday/weekend; this is where the night-time load gap shows up.
   - `planning_topk()` (`report.py:207`) evaluates a daily alert list: each test day, take the K route-hours with the highest forecast load and measure how many were really high crowding at capacity 70.
-- **`src/transit/verify.py`:** `main()` compares the rebuilt route-hour table cell by cell with the committed one (`git show HEAD:...`), then compares all 2,326 numbers in `metrics.json` with the committed file (relative tolerance 1e-6, run times ignored). Exit status 1 if anything differs.
+- **`src/transit/verify.py`:** `main()` compares the rebuilt route-hour table cell by cell with the committed one (`git show HEAD:...`), then compares all 2,326 numbers in `metrics.json` with the committed file (relative tolerance 1e-6, run times ignored). Exit status 1 if anything differs. Because it reads the committed versions through git, it needs a git clone, not a ZIP download; without git it prints `NEEDS_GIT` (an explanation) and exits with status 2. `python -m transit.verify OLD.json NEW.json` compares any two metrics files without git.
 - **Tests:** `tests/test_verify.py`; `tests/test_app.py::test_planning_precision_matches_prediction_files`, `test_report_coverage_by_period_agrees_with_metrics`.
 - **Idea to explain:** the write-up cannot drift from the evaluation, because it is generated from it and checks itself. A fresh-clone rerun on 24 Oct reproduced every committed number (`docs/ARCHITECTURE.md#reproduction-record`).
 
@@ -271,7 +275,7 @@ Things worth noticing (good viva material):
 - **The baselines are just feature columns.** No separate computation: the historical average *is* `y_hist_daytype`.
 - **`y_hist_daytype` = 1165.80 is the mean of 32 earlier weekdays** at 08:00 for route 137 I: the training weekdays, the validation weekdays, and the test days 15 and 16 April. That is correct for a day-ahead forecast (yesterday's data is known before today starts), and it is why the historical average keeps improving through the test weeks. The *model* is not retrained during the test weeks; only its inputs move forward.
 - **`y_roll7` is lower (977)** because it averages the last 7 calendar days at 08:00, including Saturday and Sunday, when this route carries fewer people.
-- **In this hour LightGBM under-predicts** (963.5 vs 1266.7) and the blend pulls it halfway back towards the historical average. Look at `reports/figures/example_route_day.png`: the morning peak (06:00–08:00) is where the final forecast is furthest below the actual on this day. Do not claim the model is always closer than the baselines; for this hour the last-week rule was closer.
+- **In this hour LightGBM under-predicts** (963.5 vs 1266.7) and the blend pulls it halfway back towards the historical average. Look at `reports/figures/example_route_day.png`: the morning peak (06:00–08:00) is where the final forecast is furthest below the actual on this day. Do not claim the model is always closer than the baselines; for this hour the last-week rule was closer. In fact 17 April is the only test day on which the final forecast's demand WAPE was higher than the historical average's (16.74% against 16.59%; `metrics.json` → `segments_test.by_day`). The example was chosen by a fixed rule in `report.fig_example` (busiest route-direction, first test Wednesday), not to flatter the model.
 
 The estimated-load row for the same slot (`load_test.parquet`): actual 90.9, final forecast 90.0, historical average 91.8, LightGBM 88.3. At capacity 70 the load factor is 90.9 / 70 ≈ 1.30, so both actual and forecast are **high** crowding.
 
@@ -292,14 +296,14 @@ The full log is `docs/DECISIONS.md` (D1–D13). These are the ones you are most 
 | Split (D3) | Train 1 Mar–7 Apr, validation 8–14 Apr, test 15–28 Apr | Random split; k-fold | Forecasting the future: a random split would let the model see days after the ones it predicts. |
 | Model | LightGBM, route as a categorical feature | Deep learning (LSTM/GRU), SARIMA per route | Trees handle missing values and mixed features natively, train in seconds on a laptop, and are deterministic with a fixed seed. About 660 scored route-directions would mean about 660 separate SARIMA models. Deep models were not tried, so we make no claim about them. |
 | Objective | `regression_l1` (chosen on validation) | L2, Poisson, Tweedie, Huber | Lowest validation WAPE; L1 fits WAPE, which is an absolute-error metric. |
-| Final forecast (D12) | 0.5 × LightGBM + 0.5 × historical average | LightGBM alone; residual model on the historical average | LightGBM alone tied the historical average; the residual model did not help on validation (`reports/archive/experiments_validation_v2.csv`). |
+| Final forecast (D12) | 0.5 × LightGBM + 0.5 × historical average | LightGBM alone; residual model on the historical average | LightGBM alone tied the historical average. On validation (`reports/archive/experiments_validation_v2.csv`), a residual model on the historical average was slightly better than LightGBM alone for demand (18.69% to 18.82%), but stopped after 11–31 rounds; the simpler blend did better (18.65%). |
 | Bursts (D11) | Kept, flagged, reported separately | Capping at 100 | They look like real crowds at terminals, possibly over-attributed to one bus. Capping would change the labels. |
 | Capacity (D10) | ABNT NBR 15570 minimums, four scenarios | One assumed number | SUNT has no capacity and the fleet per route is unknown. |
 | Intervals (D13) | Quantile LightGBM + conformal margin | No intervals; Gaussian intervals | Planners need a range; conformal calibration gives a coverage check on held-out data. |
 
 ### Honest limitations to state before you are asked
 
-- **The gain over the historical average is small:** 0.20 WAPE points for demand (95% bootstrap interval −0.29 to −0.06). The big gain is over the last-week rule (about 23% lower WAPE). Most of the predictable structure is a stable weekly profile per route and hour; `y_hist_daytype` carries 72.94% of the model's total gain.
+- **The gain over the historical average is small:** 0.20 WAPE points for demand (95% bootstrap interval −0.29 to −0.06), lower WAPE on 13 of the 14 test days. It is a gain in absolute error only: on RMSE the historical average is slightly better for demand (29.58 vs 29.72). The bootstrap resamples routes within the same two weeks, so it says nothing about other weeks or seasons. The big gain is over the last-week rule (about 23% lower WAPE). Most of the predictable structure is a stable weekly profile per route and hour; `y_hist_daytype` carries 72.94% of the model's total gain.
 - **The test weeks were scored twice** (v1 LightGBM alone, then the blend). The blend weight was chosen on validation only.
 - **Load is an estimate.** Riders aged 65+ travel without a card and are missing. Capacity is assumed.
 - **One city, 59 days, no holiday in the test weeks.** No validation for Indian or tier-2 cities.
@@ -310,7 +314,7 @@ The full log is `docs/DECISIONS.md` (D1–D13). These are the ones you are most 
 
 ## 5. Reading paths and exercises for each member
 
-The presentation split below is the proposal in `docs/VIVA_PREP.md` section 6; swap paths if you swap sections. Everyone should also read section 1 and section 3 of this guide.
+The reading paths follow the speaking split in [TEAM_PRESENTATION_GUIDE.md](TEAM_PRESENTATION_GUIDE.md) (provisional); swap paths if you swap sections. Everyone should also read section 1 and section 3 of this guide.
 
 Each exercise gives a task, a hint, and an expected answer grounded in the code. **Try it before opening the answer.** Where an exercise asks you to run something, do it on your own laptop; that also checks your setup.
 
@@ -429,7 +433,7 @@ len(c), c.boardings.mean()
 
 <details><summary><b>T3. Why does the bootstrap resample route-directions instead of individual hours?</b></summary>
 
-**Expected:** `bootstrap_wape_diff` (`report.py:163`) sums absolute errors per route-direction (`groupby("key")`) and resamples those 664 clusters. Hours of the same route are strongly correlated, so resampling hours would pretend we have 127,935 independent observations and give an interval that is too narrow. The result is a frequentist 95% interval for the WAPE difference (−0.29 to −0.06 points for final minus historical average, demand). It is **not** "the probability that the blend is better".
+**Expected:** `bootstrap_wape_diff` (`report.py:163`) sums absolute errors per route-direction (`groupby("key")`) and resamples those 664 clusters. Hours of the same route are strongly correlated, so resampling hours would pretend we have 127,935 independent observations and give an interval that is too narrow. The result is a frequentist 95% interval for the WAPE difference (−0.29 to −0.06 points for final minus historical average, demand). It is **not** "the probability that the blend is better", and because it resamples route-directions within the same 14 test days, it does not cover week-to-week or seasonal variation.
 </details>
 
 <details><summary><b>T4. How often did the last-week baseline have to fall back, and why does that matter for a fair comparison?</b></summary>
@@ -445,7 +449,7 @@ len(c), c.boardings.mean()
 ### Disha: dashboard walkthrough, deployment and local fallback
 
 **Reading path (about 1 hour):**
-1. `app/streamlit_app.py`, top to bottom (it is 345 lines; `main()` is at the end).
+1. `app/streamlit_app.py`, top to bottom (it is 346 lines; `main()` is at the end).
 2. `src/transit/crowding.py` (the slider depends on it).
 3. `tests/test_app.py`.
 4. README section "Deployment (free)".
@@ -518,12 +522,12 @@ Concrete case (route 137 I, Wed 17 Apr, 09:00, forecast estimated load 39.6): ca
 Run these on your own laptop. They take about a minute together and need no download.
 
 ```bash
-pytest -q                               # expect: 85 passed
+pytest -q                               # expect: 86 passed
 python -m transit.verify                # expect: all 2326 values match
 streamlit run app/streamlit_app.py      # open each of the 5 pages
 ```
 
-`transit.verify` with no arguments compares against the committed `route_hour.parquet` and `metrics.json`. On a fresh clone without a rerun it simply confirms the committed files are consistent; after a full rerun (`transit.data.download`, `transit.data.build`, `transit.models.run`) it confirms the rerun reproduced them.
+`transit.verify` with no arguments compares against the committed `route_hour.parquet` and `metrics.json`, so run it in a git clone (not a ZIP download). On a fresh clone without a rerun it simply confirms the committed files are consistent; after a full rerun (`transit.data.download`, `transit.data.build`, `transit.models.run`) it confirms the rerun reproduced them.
 
 **A good test of understanding:** pick any number in `RESULTS.md` and find the line of code that produced it. If you can do that for the numbers on your slides, you are ready for follow-up questions.
 
