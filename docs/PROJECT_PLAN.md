@@ -63,14 +63,15 @@ The Victoria train-count dataset is a stretch goal only if the core is finished 
 - [x] Baselines, LightGBM, validation tuning and ablation, final blend (D12)
 - [x] Test evaluation, error analysis, crowding sensitivity, bootstrap intervals ([RESULTS.md](../reports/RESULTS.md))
 - [x] Streamlit dashboard (5 pages) with smoke tests; checked in headless Chromium
-- [x] 68 tests; GitHub Actions on Python 3.11 and 3.12
-- [x] Architecture document, viva preparation sheet, slide deck draft (claude.ai artifact, shared by Jay)
+- [x] Automated tests (pytest) on GitHub Actions, Python 3.11 and 3.12; `python -m transit.verify` checks a rerun against the committed results
+- [x] Architecture document, viva preparation sheet, slide deck draft (claude.ai artifact; private until Jay shares it)
+- [x] Backup demo video recorded (68 s, no narration; saved in Jay's local project folder, not in the repository)
 - [ ] **Jay:** deploy on Streamlit Community Cloud (needs his GitHub sign-in); add the URL to the README
 - [ ] **Jay:** share the slide deck with the team; agree the speaking split
-- [ ] **Akshar:** run the full pipeline from a fresh clone (Colab or own laptop) and post the output on GitHub
+- [ ] **Akshar:** run [`notebooks/reproduce_on_colab.ipynb`](../notebooks/reproduce_on_colab.ipynb) on Colab (or the README steps on his laptop) and post the `transit.verify` output in a GitHub issue
 - [ ] **Tirth:** read RESULTS.md end to end; check the error-analysis claims against the dashboard
-- [ ] **Disha:** rehearse the 3-minute demo; record the backup demo video
-- [ ] **Shivani:** read DECISIONS.md D8–D12 and VIVA_PREP.md; own the limitations slide
+- [ ] **Disha:** rehearse the 3-minute demo; re-record the backup video with narration if the team wants one
+- [ ] **Shivani:** read DECISIONS.md D8–D13 and VIVA_PREP.md; own the limitations slide
 - [ ] **All:** each member runs `pytest` and the app on their own laptop before 1 Nov
 - [ ] **All:** code freeze at the end of 31 Oct; rehearsals 1–2 Nov
 - [ ] **Team decision:** a licence for our own code (MIT proposed)
