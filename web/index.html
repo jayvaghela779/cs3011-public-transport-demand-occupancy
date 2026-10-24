@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>AI Based Public Transport Demand and Occupancy Prediction</title>
+    <meta name="description" content="CS3011 Group 52 dashboard: day-ahead bus demand and estimated on-board load forecasts (SUNT data, Salvador, Brazil). Runs Python in the browser." />
+    <!--
+      Public dashboard for CS3011 Group 52, hosted on GitHub Pages.
+
+      This page runs the unchanged Streamlit app (app/streamlit_app.py) inside the
+      visitor's browser with stlite (Streamlit on Pyodide, Python compiled to
+      WebAssembly). There is no server. .github/workflows/pages.yml copies the app code
+      and the committed result files from main next to this page (web/build_site.py),
+      with a SHA-256 manifest, so the site shows exactly what is committed there.
+      Nothing is trained or uploaded.
+
+      Pinned: stlite 1.12.0 (Streamlit 1.65, Pyodide 314.0.3) and the wheels in web/wheels.txt.
+      Edit this file on main, never on gh-pages.
+    -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.0/build/stlite.css" />
+    <style>
+      body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #ffffff; color: #1f2937; }
+      #boot { max-width: 640px; margin: 15vh auto 0; padding: 0 16px; line-height: 1.5; }
+      #boot h1 { font-size: 22px; margin: 0 0 12px; }
+      #boot p { margin: 0 0 10px; font-size: 16px; }
+      #boot .small { font-size: 14px; color: #4b5563; }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div id="boot">
+        <h1>AI Based Public Transport Demand and Occupancy Prediction</h1>
+        <p>Loading the dashboard. It runs Python inside your browser, so the first visit downloads about 80 MB: our result files first, then the Python runtime. On a slow connection this takes several minutes; later visits reuse the browser cache and are much faster.</p>
+        <p id="progress" class="small" aria-live="polite">Starting.</p>
+        <p class="small">CS3011 Artificial Intelligence, Group 52, PDPM IIITDM Jabalpur. Code and results:
+          <a href="https://github.com/jayvaghela779/cs3011-public-transport-demand-occupancy">github.com/jayvaghela779/cs3011-public-transport-demand-occupancy</a>.
+          Needs a recent Chrome, Edge, Firefox or Safari with JavaScript enabled.</p>
+      </div>
+    </div>
+    <div id="stuck" role="alert" style="display:none;position:fixed;left:16px;right:16px;bottom:16px;z-index:1000;max-width:640px;margin:0 auto;padding:12px 16px;border-radius:8px;background:#fef3c7;color:#78350f;font-size:15px;line-height:1.4;box-shadow:0 2px 8px rgba(0,0,0,.2)">
+      Loading has not moved for two minutes. A download may have stalled: reload the page. Files already downloaded are reused, so the next attempt is faster.
+    </div>
+    <noscript>This dashboard needs JavaScript.</noscript>
+    <script type="module">
+      const STLITE = "https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.0/build/";
+      const PYODIDE = "https://cdn.jsdelivr.net/pyodide/v314.0.3/full/pyodide.mjs";
+      // The app files and results are published on this site (gh-pages). They are
+      // downloaded from jsDelivr's mirror of that branch first, because on a network we
+      // tested on 24 Oct 2026 github.io sent large files at about 0.1 Mbit/s and
+      // raw.githubusercontent.com not at all, while jsDelivr ran at the line's full
+      // speed. Every file is checked against site-manifest.json (SHA-256, written from
+      // main by web/build_site.py); a stale, failed or stalled copy is fetched again
+      // from this site, so the app always gets exactly the committed files.
+      const SITE = new URL(".", document.baseURI).href;
+      const MIRROR = "https://cdn.jsdelivr.net/gh/jayvaghela779/cs3011-public-transport-demand-occupancy@gh-pages/";
+      const STALL_MS = 20000;   // give up on a source after 20 s without any new bytes
+      // Pure-Python wheels from web/wheels.txt, published in the site's wheels/ folder
+      // (files.pythonhosted.org was also throttled on that network).
+      const WHEELS = [
+        "plotly-7.1.0-py3-none-any.whl",
+        "itsdangerous-2.2.0-py3-none-any.whl",
+        "python_multipart-0.0.32-py3-none-any.whl",
+      ];
+
+      // Every file the app reads. tests/test_web.py checks this list against the app's imports and paths.
+      const FILES = [
+        "app/streamlit_app.py",
+        "src/transit/__init__.py",
+        "src/transit/crowding.py",
+        "src/transit/metrics.py",
+        "reports/metrics.json",
+        "reports/planning.json",
+        "data/predictions/demand_valid.parquet",
+        "data/predictions/demand_test.parquet",
+        "data/predictions/load_valid.parquet",
+        "data/predictions/load_test.parquet",
+        "data/predictions/forecast_2024-04-29.parquet",
+      ];
+
+      // Watchdog: if the loading messages stop changing for 2 minutes before the app
+      // appears, suggest a reload (on a slow network we saw one runtime download stall
+      // inside Pyodide's loader, which has no timeout).
+      let lastChange = Date.now();
+      new MutationObserver(() => { lastChange = Date.now(); })
+        .observe(document.body, { childList: true, subtree: true, characterData: true });
+      const watchdog = setInterval(() => {
+        const ready = document.querySelector('[data-testid="stSidebar"]');
+        document.getElementById("stuck").style.display = !ready && Date.now() - lastChange > 120000 ? "block" : "none";
+        if (ready) clearInterval(watchdog);
+      }, 5000);
+
+      const progress = document.getElementById("progress");
+      const say = (t) => { if (progress) progress.textContent = t; };
+      const mb = (n) => (n / 1e6).toFixed(1);
+
+      async function hex(buf) {
+        const d = new Uint8Array(await crypto.subtle.digest("SHA-256", buf));
+        return Array.from(d, (b) => b.toString(16).padStart(2, "0")).join("");
+      }
+
+      // Download url, calling onBytes(n) as data arrives; abort if nothing arrives for STALL_MS.
+      async function download(url, onBytes) {
+        const ctrl = new AbortController();
+        let timer = setTimeout(() => ctrl.abort(), STALL_MS);
+        try {
+          const r = await fetch(url, { signal: ctrl.signal });
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          const reader = r.body.getReader();
+          const parts = [];
+          let n = 0;
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            clearTimeout(timer);
+            timer = setTimeout(() => ctrl.abort(), STALL_MS);
+            parts.push(value);
+            n += value.length;
+            onBytes(value.length);
+          }
+          const out = new Uint8Array(n);
+          let at = 0;
+          for (const p of parts) { out.set(p, at); at += p.length; }
+          return out;
+        } finally {
+          clearTimeout(timer);
+        }
+      }
+
+      async function getFile(path, want, onBytes) {
+        for (const base of [MIRROR, SITE]) {
+          let got = 0;
+          try {
+            const data = await download(base + path, (k) => { got += k; onBytes(k); });
+            if (data.length === want.bytes && (await hex(data)) === want.sha256) return data;
+            console.warn(`${path}: copy from ${base} does not match the manifest; trying the next source`);
+          } catch (e) {
+            console.warn(`${path}: ${base} failed (${e}); trying the next source`);
+          }
+          onBytes(-got);
+        }
+        throw new Error(`Could not download ${path}`);
+      }
+
+      try {
+        say("Reading the file list.");
+        const manifest = await (await fetch(SITE + "site-manifest.json", { cache: "no-cache" })).json();
+        const total = FILES.reduce((s, f) => s + manifest.files[f].bytes, 0);
+        let done = 0;
+        const files = {};
+        const queue = [...FILES];
+        const worker = async () => {
+          for (let f; (f = queue.shift()); ) {
+            files[f] = await getFile(f, manifest.files[f], (k) => {
+              done += k;
+              say(`Downloading results: ${mb(done)} of ${mb(total)} MB.`);
+            });
+          }
+        };
+        await Promise.all([worker(), worker(), worker()]);
+        // Wheels: use the mirror if it has them, otherwise this site.
+        const wheelUrls = await Promise.all(WHEELS.map(async (w) => {
+          try {
+            const r = await fetch(MIRROR + "wheels/" + w, { method: "HEAD" });
+            if (r.ok) return MIRROR + "wheels/" + w;
+          } catch (e) { /* fall through */ }
+          return SITE + "wheels/" + w;
+        }));
+        say("Results downloaded and checked. Starting Python.");
+
+        const { mount } = await import(STLITE + "stlite.js");
+        mount(
+          {
+            entrypoint: "app/streamlit_app.py",
+            requirements: wheelUrls,
+            pyodideUrl: PYODIDE,
+            files: Object.fromEntries(FILES.map((f) => [f, files[f]])),
+            streamlitConfig: {
+              "client.toolbarMode": "viewer",
+              "browser.gatherUsageStats": false,
+            },
+          },
+          document.getElementById("root"),
+        );
+      } catch (e) {
+        say(`Loading failed: ${e.message}. Reload the page to try again, or run the app locally (see the repository README).`);
+        throw e;
+      }
+    </script>
+  </body>
+</html>

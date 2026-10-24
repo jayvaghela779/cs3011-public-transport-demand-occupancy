@@ -1,0 +1,59 @@
+name: pages
+
+# Publishes the in-browser dashboard (web/index.html plus the app code and the
+# committed result files it loads) to the gh-pages branch, which GitHub Pages serves
+# at https://jayvaghela779.github.io/cs3011-public-transport-demand-occupancy/
+# Runs only when something the site uses changes on main. Never force-pushes.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "app/**"
+      - "src/transit/**"
+      - "reports/metrics.json"
+      - "reports/planning.json"
+      - "data/predictions/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build the site folder
+        run: python web/build_site.py "$RUNNER_TEMP/site"
+      - name: Commit the site to gh-pages
+        run: |
+          git fetch --depth=1 origin gh-pages
+          git worktree add "$RUNNER_TEMP/pages" FETCH_HEAD
+          rsync -a --delete --exclude .git "$RUNNER_TEMP/site/" "$RUNNER_TEMP/pages/"
+          cd "$RUNNER_TEMP/pages"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "gh-pages already matches main; nothing to publish."
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -q -m "Publish dashboard from main ${GITHUB_SHA::7}"
+          git push origin HEAD:gh-pages
+      - name: Refresh the jsDelivr mirror of gh-pages
+        # The page downloads results through jsDelivr and checks each file's SHA-256,
+        # falling back to github.io for stale copies; purging just makes the mirror fresh.
+        run: |
+          for f in site-manifest.json $(python -c "import json; print(' '.join(json.load(open('$RUNNER_TEMP/site/site-manifest.json'))['files']))"); do
+            curl -fsS --max-time 30 "https://purge.jsdelivr.net/gh/${GITHUB_REPOSITORY}@gh-pages/$f" > /dev/null || echo "purge failed for $f (harmless)"
+          done
