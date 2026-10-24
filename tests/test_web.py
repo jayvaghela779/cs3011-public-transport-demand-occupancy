@@ -65,3 +65,22 @@ def test_versions_are_pinned():
     assert re.search(r"pyodide/v[\d.]+/full/pyodide\.mjs", html), "pin an exact Pyodide version"
     reqs = re.search(r"requirements: \[(.*?)\]", html).group(1)
     assert all("==" in r for r in re.findall(r'"([^"]+)"', reqs)), "pin package versions"
+
+
+def test_build_site_copies_every_listed_file(tmp_path):
+    sys.path.insert(0, str(config.ROOT / "web"))
+    try:
+        import build_site
+    finally:
+        sys.path.pop(0)
+    files = build_site.build(tmp_path)
+    assert (tmp_path / "index.html").read_text(encoding="utf-8") == INDEX.read_text(encoding="utf-8")
+    assert (tmp_path / ".nojekyll").exists()      # without it GitHub Pages drops __init__.py
+    for f in files:
+        assert (tmp_path / f).read_bytes() == (config.ROOT / f).read_bytes(), f
+
+
+def test_page_loads_files_from_its_own_site():
+    html = INDEX.read_text(encoding="utf-8")
+    assert "https://raw.githubusercontent.com" not in html, "serve files from the Pages site (same origin)"
+    assert "new URL(f, document.baseURI)" in html

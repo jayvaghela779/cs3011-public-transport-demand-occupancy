@@ -10,13 +10,13 @@
 
       This page runs the unchanged Streamlit app (app/streamlit_app.py) inside the
       visitor's browser with stlite (Streamlit on Pyodide, Python compiled to
-      WebAssembly). There is no server: the app code and the committed result files
-      are fetched from this repository's main branch, so the page always shows
-      exactly what is committed there. Nothing is trained or uploaded.
+      WebAssembly). There is no server. The app code and the committed result files
+      are served next to this page; .github/workflows/pages.yml copies them from main
+      (web/build_site.py), so the site shows exactly what is committed there.
+      Nothing is trained or uploaded.
 
       Pinned: stlite 1.12.0 (Streamlit 1.65, Pyodide 314.0.3), plotly 7.1.0.
-      To change versions or files, edit web/index.html on main and copy it to the
-      gh-pages branch (docs/DEMO_RUNBOOK.md, "Public deployment").
+      Edit this file on main, never on gh-pages.
     -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.0/build/stlite.css" />
     <style>
@@ -41,7 +41,9 @@
     <script type="module">
       const STLITE = "https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.0/build/";
       const PYODIDE = "https://cdn.jsdelivr.net/pyodide/v314.0.3/full/pyodide.mjs";
-      const REPO = "https://raw.githubusercontent.com/jayvaghela779/cs3011-public-transport-demand-occupancy/main/";
+      // Same origin as this page. (raw.githubusercontent.com did not load at all from
+      // one Indian network we tested on 24 Oct 2026, while github.io and jsDelivr did.)
+      const here = (f) => new URL(f, document.baseURI).href;
 
       // Every file the app reads. tests/test_web.py checks this list against the app's imports and paths.
       const FILES = [
@@ -64,7 +66,7 @@
           entrypoint: "app/streamlit_app.py",
           requirements: ["plotly==7.1.0"],
           pyodideUrl: PYODIDE,
-          files: Object.fromEntries(FILES.map((f) => [f, { url: REPO + f }])),
+          files: Object.fromEntries(FILES.map((f) => [f, { url: here(f) }])),
           streamlitConfig: {
             "client.toolbarMode": "viewer",
             "browser.gatherUsageStats": false,
