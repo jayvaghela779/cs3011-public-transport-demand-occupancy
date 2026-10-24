@@ -21,6 +21,7 @@ Day-ahead forecasts per route, direction and hour, scored on observed route-hour
 - **Against the usual baseline:** the final forecast cuts error by 23% versus "same hour last week".
 - **Against a strong baseline:** against the historical average the gain is small but consistent: −0.20 WAPE points for demand (95% bootstrap interval −0.29 to −0.06).
 - **LightGBM alone does not beat the historical average.** We report this as a finding (decision D12). The test weeks were scored twice, and both runs are disclosed.
+- **Uncertainty:** each forecast has an 80% prediction interval (quantile models plus conformal calibration on validation). It covers 80.4% of actual test demand and 79.3% of test load.
 - **Crowding levels** (load ÷ capacity: low < 50%, high ≥ 80%) for a standard 70-passenger bus: macro-F1 0.769. "High crowding" alerts are right 79% of the time and catch 61% of high hours. Results for 40, 80 and 100-passenger buses are in the results file.
 
 ## Team
