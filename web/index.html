@@ -38,6 +38,9 @@
           Needs a recent Chrome, Edge, Firefox or Safari with JavaScript enabled.</p>
       </div>
     </div>
+    <div id="stuck" role="alert" style="display:none;position:fixed;left:16px;right:16px;bottom:16px;z-index:1000;max-width:640px;margin:0 auto;padding:12px 16px;border-radius:8px;background:#fef3c7;color:#78350f;font-size:15px;line-height:1.4;box-shadow:0 2px 8px rgba(0,0,0,.2)">
+      Loading has not moved for two minutes. A download may have stalled: reload the page. Files already downloaded are reused, so the next attempt is faster.
+    </div>
     <noscript>This dashboard needs JavaScript.</noscript>
     <script type="module">
       const STLITE = "https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.0/build/";
@@ -74,6 +77,18 @@
         "data/predictions/load_test.parquet",
         "data/predictions/forecast_2024-04-29.parquet",
       ];
+
+      // Watchdog: if the loading messages stop changing for 2 minutes before the app
+      // appears, suggest a reload (on a slow network we saw one runtime download stall
+      // inside Pyodide's loader, which has no timeout).
+      let lastChange = Date.now();
+      new MutationObserver(() => { lastChange = Date.now(); })
+        .observe(document.body, { childList: true, subtree: true, characterData: true });
+      const watchdog = setInterval(() => {
+        const ready = document.querySelector('[data-testid="stSidebar"]');
+        document.getElementById("stuck").style.display = !ready && Date.now() - lastChange > 120000 ? "block" : "none";
+        if (ready) clearInterval(watchdog);
+      }, 5000);
 
       const progress = document.getElementById("progress");
       const say = (t) => { if (progress) progress.textContent = t; };
