@@ -116,7 +116,7 @@ def run_target(X: pd.DataFrame, target: str, log) -> tuple[dict, pd.DataFrame, p
         ablation[gname] = regression_metrics(va["target"], lgbm.predict(m, va, gf))
         log(f"  ablation {gname}: valid WAPE {ablation[gname]['wape']:.4f}")
 
-    # 2. refit on train + valid, 3. score once on test
+    # 2. refit on train + valid, 3. score on test (second test scoring overall, decision D12)
     trva = pd.concat([tr, va])
     final = lgbm.fit_fixed_rounds(trva, feats, cfg, rounds)
     MODEL_DIR.mkdir(parents=True, exist_ok=True)

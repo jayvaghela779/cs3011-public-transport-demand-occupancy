@@ -8,7 +8,7 @@ flowchart LR
     B -->|"transit.data.build<br/>6 quality checks"| C["route_hour.parquet<br/>541,611 rows"]
     C -->|"service.py (D8, D9)<br/>training-only profile"| D["Slots<br/>observed / missing_record"]
     D -->|"features.py<br/>only days before D"| E["Feature frames<br/>demand, load"]
-    E -->|"models/run.py<br/>tune on validation,<br/>test once"| F["metrics.json<br/>predictions/*.parquet"]
+    E -->|"models/run.py<br/>tune on validation,<br/>score test (D12)"| F["metrics.json<br/>predictions/*.parquet"]
     F -->|"transit.report"| G["RESULTS.md<br/>figures"]
     F --> H["Streamlit app<br/>(reads committed files only)"]
 ```
@@ -24,6 +24,7 @@ flowchart LR
 | Train and evaluate | `python -m transit.models.run` | route-hour table | `reports/metrics.json`, `reports/tuning_*.csv`, `data/predictions/*.parquet`, `models/` (git-ignored) | `test_app.py` (metrics match predictions) |
 | Report | `python -m transit.report` | metrics and predictions | `reports/RESULTS.md`, `reports/figures/*.png` | stops if metrics and predictions disagree |
 | Dashboard | `streamlit run app/streamlit_app.py` | metrics and predictions | nothing | `test_app.py` (every page renders) |
+| Verify a rerun | `python -m transit.verify` | rebuilt table and metrics, committed versions from git | nothing | `test_verify.py` |
 
 ## Key design choices
 
@@ -50,7 +51,24 @@ src/transit/
   crowding.py         capacity scenarios and levels (D10)
   models/baselines.py three baselines with recorded fallbacks
   models/lgbm.py      LightGBM fit, early stopping, prediction
-  models/run.py       tuning, ablation, refit, single test scoring, forecast
+  models/run.py       tuning, ablation, refit, test scoring, intervals, forecast
   report.py           RESULTS.md and figures
+  verify.py           compare a rerun with the committed table and metrics
 app/streamlit_app.py  dashboard
 ```
+
+## Reproduction record
+
+**24 Oct 2026, fresh clone of `main` at `d3e94af`, Linux, 2 CPU threads, Python 3.12.3, pandas 3.1.0, pyarrow 26.0.0, LightGBM 4.7.0** (the committed results were made with Python 3.13 and pandas 3.0.5):
+
+| Step | Result |
+| --- | --- |
+| `transit.data.download` | 59 files downloaded, all SHA-256 checksums matched |
+| `transit.data.build` | all 6 quality checks passed; table identical to the committed one in every cell (541,611 rows × 12 columns) |
+| `transit.models.run` | 479 s; all 2,326 numbers in `metrics.json` identical to the committed file (only wall-clock times differ) |
+| Prediction files | all 5 identical in content to the committed files |
+| `transit.report` | `RESULTS.md` and `planning.json` byte-identical to the committed files |
+| `pytest` | 77 passed |
+
+The whole sequence took about 11 minutes. The parquet files differ in bytes only in their metadata (which records the pandas version), not in content. Not yet repeated on Windows or Colab.
+

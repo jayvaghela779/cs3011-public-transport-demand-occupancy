@@ -160,8 +160,9 @@ def page_explorer(metrics: dict) -> None:
 
 def page_comparison(metrics: dict) -> None:
     st.subheader("Model comparison on the test weeks (15–28 Apr 2024)")
-    st.caption("The model was tuned on the validation week only and scored once on the test weeks. "
-               "All methods are scored on exactly the same observed route-hours.")
+    st.caption("Settings and the blend weight were chosen on the validation week only. The test weeks have been "
+               "scored twice: LightGBM alone (first run), then this blend; both results are reported in "
+               "RESULTS.md (decision D12). All methods are scored on exactly the same observed route-hours.")
     for short, label in (("demand", "Demand: boardings per route-hour"),
                          ("load", "Estimated load: mean peak load per bus per route-hour")):
         r = metrics["targets"][short]
@@ -322,6 +323,9 @@ first stop of a trip. Kept, not capped; load results are shown with and without 
 
 **Capacity.** Not in the data. Crowding uses ABNT NBR 15570 minimum capacities and is reported for four
 vehicle classes because the fleet mix per route is unknown.
+
+**Intervals.** The 80% bands hit their target overall, but not everywhere: estimated-load bands cover only
+about half of night hours (00:00–02:00). Coverage by period is in RESULTS.md.
 """)
 
 
