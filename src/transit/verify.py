@@ -77,20 +77,35 @@ def table_differences(old: pd.DataFrame, new: pd.DataFrame) -> str | None:
     return None
 
 
+NEEDS_GIT = ("python -m transit.verify compares with the files committed in git, so it needs a git clone "
+             "(not a ZIP download) and git on the PATH. Clone the repository with git, or compare two "
+             "metrics files directly: python -m transit.verify OLD.json NEW.json")
+
+
 def main(argv: list[str]) -> int:
     if len(argv) == 2:
         old, new = (json.loads(Path(p).read_text(encoding="utf-8")) for p in argv)
-    else:
-        table = "data/processed/route_hour.parquet"
-        t_old = pd.read_parquet(io.BytesIO(committed(table)))
-        t_new = pd.read_parquet(ROOT / table)
-        problem = table_differences(t_old, t_new)
-        if problem:
-            print(f"{table} differs from the committed table: {problem}")
-            return 1
-        print(f"{table}: all {t_new.shape[0]:,} rows x {t_new.shape[1]} columns match.")
-        old = json.loads(committed("reports/metrics.json"))
-        new = json.loads((ROOT / "reports" / "metrics.json").read_text(encoding="utf-8"))
+        return _report(old, new)
+    table = "data/processed/route_hour.parquet"
+    try:
+        committed_table = committed(table)
+        committed_metrics = committed("reports/metrics.json")
+    except (FileNotFoundError, subprocess.CalledProcessError):   # no git, or not a git clone
+        print(NEEDS_GIT)
+        return 2
+    t_old = pd.read_parquet(io.BytesIO(committed_table))
+    t_new = pd.read_parquet(ROOT / table)
+    problem = table_differences(t_old, t_new)
+    if problem:
+        print(f"{table} differs from the committed table: {problem}")
+        return 1
+    print(f"{table}: all {t_new.shape[0]:,} rows x {t_new.shape[1]} columns match.")
+    old = json.loads(committed_metrics)
+    new = json.loads((ROOT / "reports" / "metrics.json").read_text(encoding="utf-8"))
+    return _report(old, new)
+
+
+def _report(old: dict, new: dict) -> int:
     diffs = differences(old, new)
     n = len(flatten(old))
     if diffs:
