@@ -81,6 +81,8 @@ pytest
 streamlit run app/streamlit_app.py
 ```
 
+`requirements.txt` allows newer releases. If a future release ever changes the results, install the exact versions that reproduced them instead: `pip install -r requirements-lock.txt` (tested on Python 3.12).
+
 The dashboard reads only committed files, so `pip install -r requirements.txt` and `streamlit run app/streamlit_app.py` are enough for the demo. No download is needed, and it works offline.
 
 ## Deployment (free)

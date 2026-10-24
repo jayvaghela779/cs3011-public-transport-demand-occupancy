@@ -1,0 +1,4 @@
+[browser]
+# Do not send anonymous usage statistics to Streamlit (also avoids failed
+# network calls when the demo runs offline).
+gatherUsageStats = false
