@@ -32,7 +32,7 @@ def test_build_two_days_end_to_end(tmp_path):
     assert len(table) == 4
     assert table["boardings"].sum() == pytest.approx(15)
     # files written and consistent
-    on_disk = json.loads((out / "quality_report.json").read_text())
+    on_disk = json.loads((out / "quality_report.json").read_text(encoding="utf-8"))
     assert on_disk["summary"]["route_hour_rows"] == 4
     assert (out / "route_hour.parquet").exists()
 

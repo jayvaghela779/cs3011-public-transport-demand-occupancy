@@ -63,7 +63,8 @@ The Victoria train-count dataset is a stretch goal only if the core is finished 
 - [x] Baselines, LightGBM, validation tuning and ablation, final blend (D12)
 - [x] Test evaluation, error analysis, crowding sensitivity, bootstrap intervals ([RESULTS.md](../reports/RESULTS.md))
 - [x] Streamlit dashboard (5 pages) with smoke tests; checked in headless Chromium
-- [x] Automated tests (pytest) on GitHub Actions, Python 3.11 and 3.12; `python -m transit.verify` checks a rerun against the committed results
+- [x] Automated tests (pytest) on GitHub Actions: Ubuntu with Python 3.11 and 3.12, Windows with Python 3.12; `python -m transit.verify` checks a rerun against the committed results
+- [x] Full rerun from a fresh clone (Linux, Python 3.12) reproduced every committed result ([record](ARCHITECTURE.md#reproduction-record))
 - [x] Architecture document, viva preparation sheet, slide deck draft (claude.ai artifact; private until Jay shares it)
 - [x] Backup demo video recorded (68 s, no narration; saved in Jay's local project folder, not in the repository)
 - [ ] **Jay:** deploy on Streamlit Community Cloud (needs his GitHub sign-in); add the URL to the README
@@ -75,6 +76,7 @@ The Victoria train-count dataset is a stretch goal only if the core is finished 
 - [ ] **All:** each member runs `pytest` and the app on their own laptop before 1 Nov
 - [ ] **All:** code freeze at the end of 31 Oct; rehearsals 1–2 Nov
 - [ ] **Team decision:** a licence for our own code (MIT proposed)
+- [ ] **Team decision (optional):** fix the night-time load interval gap with a per-period conformal margin (D13). It would mean a third, disclosed look at the test weeks; leaving it as a reported limitation is also fine
 
 ### How the work was done
 

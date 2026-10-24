@@ -79,7 +79,7 @@ def table_differences(old: pd.DataFrame, new: pd.DataFrame) -> str | None:
 
 def main(argv: list[str]) -> int:
     if len(argv) == 2:
-        old, new = (json.loads(Path(p).read_text()) for p in argv)
+        old, new = (json.loads(Path(p).read_text(encoding="utf-8")) for p in argv)
     else:
         table = "data/processed/route_hour.parquet"
         t_old = pd.read_parquet(io.BytesIO(committed(table)))
@@ -90,7 +90,7 @@ def main(argv: list[str]) -> int:
             return 1
         print(f"{table}: all {t_new.shape[0]:,} rows x {t_new.shape[1]} columns match.")
         old = json.loads(committed("reports/metrics.json"))
-        new = json.loads((ROOT / "reports" / "metrics.json").read_text())
+        new = json.loads((ROOT / "reports" / "metrics.json").read_text(encoding="utf-8"))
     diffs = differences(old, new)
     n = len(flatten(old))
     if diffs:
