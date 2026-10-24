@@ -36,6 +36,9 @@ from transit.models import baselines, lgbm
 
 TARGETS = {"boardings": "demand", "load_trip_peak_mean": "load"}
 BASELINES = ["seasonal_naive", "dow4_mean", "hist_average"]
+# Final forecast (decision D12): w * LightGBM + (1 - w) * historical average,
+# with w chosen on the validation week from this grid.
+BLEND_WEIGHTS = [0.0, 0.25, 0.5, 0.75, 1.0]
 FORECAST_DATE = config.END_DATE + timedelta(days=1)
 REPORTS = config.ROOT / "reports"
 PRED_DIR = config.DATA_DIR / "predictions"
@@ -128,14 +131,23 @@ def run_target(X: pd.DataFrame, target: str, log) -> tuple[dict, pd.DataFrame, p
             f[b] = p
             sources[key] = {**sources.get(key, {}), b: src[f["target"].notna()].value_counts().to_dict()}
         full[key] = f
+    # choose the blend weight on validation only
+    vs = full["valid"][full["valid"]["target"].notna()]
+    blend = {w: regression_metrics(vs["target"], w * vs["model"] + (1 - w) * vs["hist_average"])["wape"]
+             for w in BLEND_WEIGHTS}
+    w_best = min(blend, key=blend.get)
+    log(f"  blend weight on LightGBM chosen on validation: {w_best} ({blend})")
+    for key in full:
+        full[key]["ensemble"] = w_best * full[key]["model"] + (1 - w_best) * full[key]["hist_average"]
     va = full["valid"][full["valid"]["target"].notna()].copy()
     te = full["test"][full["test"]["target"].notna()].copy()
-    preds = ["model"] + BASELINES
+    preds = ["ensemble", "model"] + BASELINES
 
     res = {
         "target": target,
         "features": feats,
         "chosen_config": {**cfg, "rounds": rounds},
+        "blend": {"weight_on_lightgbm": w_best, "valid_wape_by_weight": {str(k): v for k, v in blend.items()}},
         "tuning": tuning,
         "ablation_valid": ablation,
         "rows": {"train": len(tr), "valid": len(va), "test": len(te)},
@@ -151,18 +163,20 @@ def run_target(X: pd.DataFrame, target: str, log) -> tuple[dict, pd.DataFrame, p
     vol = tr.groupby(["route", "direction"], observed=True)["target"].mean()
     terc = pd.qcut(vol, 3, labels=["low", "middle", "high"])
     te = te.merge(terc.rename("volume_tercile").reset_index(), on=["route", "direction"], how="left")
+    seg_preds = ("ensemble", "seasonal_naive", "hist_average")
     seg = {
-        "period": {p: segment_metrics(te, "period", p) for p in ("model", "seasonal_naive")},
-        "daytype": {p: segment_metrics(te, "daytype", p) for p in ("model", "seasonal_naive")},
-        "volume_tercile": {p: segment_metrics(te, "volume_tercile", p) for p in ("model", "seasonal_naive")},
-        "regular_cell": {p: segment_metrics(te, "regular", p) for p in ("model", "seasonal_naive")},
+        "period": {p: segment_metrics(te, "period", p) for p in seg_preds},
+        "daytype": {p: segment_metrics(te, "daytype", p) for p in seg_preds},
+        "volume_tercile": {p: segment_metrics(te, "volume_tercile", p) for p in seg_preds},
+        "regular_cell": {p: segment_metrics(te, "regular", p) for p in seg_preds},
     }
     day = te.groupby("service_date").apply(
-        lambda g: pd.Series({"model_wape": regression_metrics(g["target"], g["model"])["wape"],
+        lambda g: pd.Series({"ensemble_wape": regression_metrics(g["target"], g["ensemble"])["wape"],
                              "sn_wape": regression_metrics(g["target"], g["seasonal_naive"])["wape"],
+                             "ha_wape": regression_metrics(g["target"], g["hist_average"])["wape"],
                              "rows": len(g)}), include_groups=False)
     seg["by_day"] = {d.strftime("%Y-%m-%d"): r.to_dict() for d, r in day.iterrows()}
-    rd_err = (te.assign(abs_err=(te["model"] - te["target"]).abs())
+    rd_err = (te.assign(abs_err=(te["ensemble"] - te["target"]).abs())
               .groupby(["route", "direction"], observed=True)
               .agg(abs_err=("abs_err", "sum"), actual=("target", "sum"), rows=("target", "size")))
     rd_err["wape"] = rd_err["abs_err"] / rd_err["actual"].replace(0, np.nan)
@@ -180,9 +194,11 @@ def run_target(X: pd.DataFrame, target: str, log) -> tuple[dict, pd.DataFrame, p
         res["crowding_valid"] = crowding_results(va, preds)
     res["segments_test"] = seg
 
-    # 4. next-day forecast (no actuals)
-    fc = X[X["split"] == "forecast"]
-    fc = fc.assign(model=lgbm.predict(final, fc, feats))
+    # 4. next-day forecast (no actuals), same blend as the evaluated final forecast
+    fc = X[X["split"] == "forecast"].copy()
+    fc["lightgbm"] = lgbm.predict(final, fc, feats)
+    fc["hist_average"] = baselines.predict(fc, "hist_average", baselines.hour_medians(trva))[0]
+    fc["model"] = w_best * fc["lightgbm"] + (1 - w_best) * fc["hist_average"]
     return res, full["valid"], full["test"], fc
 
 
@@ -198,7 +214,7 @@ def main() -> None:
     REPORTS.mkdir(exist_ok=True)
     PRED_DIR.mkdir(parents=True, exist_ok=True)
     keep = ["route", "direction", "service_date", "service_hour", "ts_hour", "daytype", "status", "regular",
-            "n_burst_events", "target", "model"] + BASELINES
+            "n_burst_events", "target", "ensemble", "model"] + BASELINES
     results = {
         "generated_by": "python -m transit.models.run",
         "package_version": __version__,
@@ -224,6 +240,16 @@ def main() -> None:
     f = forecasts[0].merge(forecasts[1], on=["route", "direction", "service_date", "service_hour", "ts_hour"])
     f.to_parquet(PRED_DIR / f"forecast_{FORECAST_DATE}.parquet", index=False, compression="zstd")
     results["forecast_rows"] = int(len(f))
+    # Disclosure: every earlier scoring of the test weeks (decision D12).
+    v1 = REPORTS / "archive" / "metrics_v1_lightgbm_only.json"
+    if v1.exists():
+        old = json.loads(v1.read_text(encoding="utf-8"))
+        results["test_scoring_history"] = [{
+            "version": "v1 (LightGBM alone, 24 Oct 2026)",
+            "file": "reports/archive/metrics_v1_lightgbm_only.json",
+            "test_wape": {s: {k: v["wape"] for k, v in old["targets"][s]["test"].items()} for s in old["targets"]},
+            "note": "First and only earlier test scoring. It showed LightGBM tying the historical average; "
+                    "the blend was then chosen on validation only."}]
     results["runtime_seconds"] = round(time.time() - t_start, 1)
     with open(REPORTS / "metrics.json", "w", encoding="utf-8") as fh:
         json.dump(results, fh, indent=2, default=float)
