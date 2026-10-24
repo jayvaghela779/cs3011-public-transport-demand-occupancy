@@ -179,6 +179,29 @@ def bootstrap_wape_diff(short: str, a: str, b: str, n_boot: int = 2000, seed: in
             "clusters": int(len(g))}
 
 
+def coverage_by_segment() -> dict:
+    """80% interval coverage on the test weeks, split by period of day and by
+    weekday/weekend, recomputed from the committed prediction files."""
+    from transit.models.run import period_of
+    out = {}
+    for short in ("demand", "load"):
+        d = pd.read_parquet(PRED / f"{short}_test.parquet")
+        d = d[d["target"].notna()]
+        inside = (d["target"] >= d["lo"]) & (d["target"] <= d["hi"])
+        by = {"period": period_of(d["service_hour"]),
+              "day": np.where(d["service_date"].dt.day_of_week >= 5, "weekend", "weekday")}
+        out[short] = {k: {str(g): float(v) for g, v in inside.groupby(np.asarray(key)).mean().items()}
+                      for k, key in by.items()}
+        out[short]["all"] = float(inside.mean())
+        worst = min(out[short]["period"], key=out[short]["period"].get)
+        w = d[np.asarray(by["period"]) == worst]
+        out[short]["worst_period"] = {"period": worst, "rows": int(len(w)),
+                                      "below": float((w["target"] < w["lo"]).mean()),
+                                      "above": float((w["target"] > w["hi"]).mean()),
+                                      "mean_width": float((w["hi"] - w["lo"]).mean())}
+    return out
+
+
 def planning_topk(ks=(25, 50, 100), capacity: float = 70.0) -> dict:
     """Daily alert list: each test day, take the K route-hours with the highest
     forecast estimated load; precision = share that were actually high crowding
@@ -251,6 +274,14 @@ def main() -> None:
                         f"{pct(r['share_negative'])} |")
         return "\n".join(rows)
 
+    cov = coverage_by_segment()
+    cov_rows = ["| Target | All | " + " | ".join(PERIOD_ORDER) + " | Weekday | Weekend |",
+                "| --- " * (len(PERIOD_ORDER) + 4) + "|"]
+    for short in ("demand", "load"):
+        c = cov[short]
+        cov_rows.append(f"| {short} | {pct(c['all'])} | " + " | ".join(pct(c["period"].get(k, float("nan")))
+                                                                     for k in PERIOD_ORDER)
+                        + f" | {pct(c['day']['weekday'])} | {pct(c['day']['weekend'])} |")
     plan = planning_topk()
     (REPORTS / "planning.json").write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
     plan_rows = "\n".join(f"| {k} | {pct(v['ensemble'])} | {pct(v['hist_average'])} | {pct(v['seasonal_naive'])} |"
@@ -369,6 +400,13 @@ already close to 80% on validation, so the conformal margin is nearly zero. For 
 about 1.5% of test hours inside the interval: almost all are hours with zero boardings whose raw lower bound sat
 just above zero. Intervals are wide for busy route-hours (mean width about 60 boardings), which is the honest
 uncertainty of an hourly route forecast.
+
+Calibrated coverage by period of day and day type (recomputed from the prediction files). The 80% target is a
+long-run rate over many route-hours; it is not guaranteed for any one route or hour.
+
+{chr(10).join(cov_rows)}
+
+{(chr(10) * 2).join(f"Lowest {short} coverage: {c['worst_period']['period']} ({c['worst_period']['rows']:,} rows, mean width {c['worst_period']['mean_width']:.1f}); {pct(c['worst_period']['below'])} of actual values fall below the interval and {pct(c['worst_period']['above'])} above it." for short, c in cov.items())}
 
 ## Crowding levels and capacity sensitivity (test)
 

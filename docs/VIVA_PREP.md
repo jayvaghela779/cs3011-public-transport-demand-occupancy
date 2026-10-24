@@ -69,8 +69,8 @@ Short answers every member should be able to give, with the evidence to point at
 
 - **Uncertain labels:** load is inferred, not observed, so even "actual" crowding is uncertain. That is why we never call it measured occupancy.
 - **Uncertain capacity:** results are reported under four capacities, not one.
-- **Uncertain improvement:** the bootstrap interval expresses our degree of belief that the blend beats the baseline, not just a single number.
-- **Prediction intervals (done, D13):** two quantile models give a 10–90% band, calibrated on the validation week by conformal prediction. On test it contains 80.4% of actual demand values (target 80%). This is a degree of belief expressed as a range.
+- **Uncertain improvement:** instead of one number, a paired bootstrap over route-directions shows how much the gain varies if a different set of routes had been sampled. It is a frequentist confidence interval, so do not call it "the probability that the blend is better".
+- **Prediction intervals (done, D13):** two quantile models give a 10–90% band, calibrated on the validation week by conformal prediction. On test it contains 80.4% of actual demand values (target 80%). The 80% is a long-run coverage rate over many route-hours, not a guarantee for any single hour. RESULTS.md splits it by period: demand stays between 79% and 84% in every period, but load intervals cover only 52% of night hours (00:00–02:00, about 2,000 test rows), mostly because actual night loads fall below a narrow interval. Say this before you are asked.
 
 ## 6. Who explains what (proposal; swap as agreed)
 

@@ -83,3 +83,16 @@ def test_planning_precision_matches_prediction_files():
     d["hi"] = crowding_level(d["target"], plan["capacity"]) == "high"
     p50 = sum(g.nlargest(50, "ensemble")["hi"].mean() for _, g in d.groupby("service_date")) / d["service_date"].nunique()
     assert p50 == pytest.approx(plan["precision_at_k"]["50"]["ensemble"], rel=1e-12)
+
+
+@pytest.mark.parametrize("short", ["demand", "load"])
+def test_report_coverage_by_period_agrees_with_metrics(short):
+    from transit.report import coverage_by_segment
+    m = json.loads(METRICS.read_text(encoding="utf-8"))["targets"][short]
+    if "intervals" not in m:
+        pytest.skip("intervals not in this metrics.json")
+    c = coverage_by_segment()[short]
+    assert c["all"] == pytest.approx(m["intervals"]["test_calibrated"]["coverage"], rel=1e-12)
+    assert set(c["period"]) <= {"early 03-05", "am peak 06-08", "midday 09-15", "pm peak 16-19",
+                                "evening 20-23", "night 00-02"}
+    assert set(c["day"]) == {"weekday", "weekend"}

@@ -152,6 +152,18 @@ about 1.5% of test hours inside the interval: almost all are hours with zero boa
 just above zero. Intervals are wide for busy route-hours (mean width about 60 boardings), which is the honest
 uncertainty of an hourly route forecast.
 
+Calibrated coverage by period of day and day type (recomputed from the prediction files). The 80% target is a
+long-run rate over many route-hours; it is not guaranteed for any one route or hour.
+
+| Target | All | early 03-05 | am peak 06-08 | midday 09-15 | pm peak 16-19 | evening 20-23 | night 00-02 | Weekday | Weekend |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| demand | 80.39% | 79.21% | 79.44% | 81.36% | 80.64% | 79.13% | 84.26% | 80.82% | 79.18% |
+| load | 79.30% | 79.14% | 79.79% | 80.30% | 80.51% | 78.02% | 52.11% | 79.75% | 78.02% |
+
+Lowest demand coverage: evening 20-23 (22,401 rows, mean width 30.2); 10.45% of actual values fall below the interval and 10.42% above it.
+
+Lowest load coverage: night 00-02 (2,157 rows, mean width 4.6); 39.96% of actual values fall below the interval and 7.93% above it.
+
 ## Crowding levels and capacity sensitivity (test)
 
 Capacity from ABNT NBR 15570:2009, Table 1 (minimum capacity by vehicle class) and Table 2 (6 standing passengers per m2). Levels: low < 50%,
