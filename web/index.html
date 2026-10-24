@@ -22,7 +22,10 @@
     <style>
       /* Loading screen, in the dashboard's own type and colours (app/design.py). The font
          files are the ones the app embeds; they are published next to this page. */
+      /* U+00B7 (the middle dot in "137 · I") is left out: in this Overpass build it has
+         zero advance width, so it falls back to the system font (as in app/design.py). */
       @font-face { font-family: "Overpass"; font-weight: 100 900; font-display: swap;
+        unicode-range: U+0000-00B6, U+00B8-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212;
         src: url("app/fonts/overpass-latin-wght-normal.woff2") format("woff2"); }
       @font-face { font-family: "Newsreader"; font-weight: 200 800; font-display: swap;
         src: url("app/fonts/newsreader-latin-opsz-normal.woff2") format("woff2"); }

@@ -206,8 +206,8 @@ a{color:var(--line)}
 def stylesheet() -> str:
     """The page's <style> block, fonts included (about 0.4 MB, built once per process)."""
     faces = "".join([
-        # The middle dot (U+00B7, used in "137 · I") falls back to the system font: Overpass
-        # spaces it unevenly.
+        # The middle dot (U+00B7, used in "137 · I") falls back to the system font: in this
+        # Overpass build it renders with zero advance width ("137 ·I").
         _font_face("Overpass", "overpass-latin-wght-normal.woff2", "100 900",
                    ranges="U+0000-00B6,U+00B8-00FF,U+0131,U+0152-0153,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,"
                           "U+2122,U+2212"),
