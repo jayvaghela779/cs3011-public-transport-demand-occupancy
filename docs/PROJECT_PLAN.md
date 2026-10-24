@@ -63,7 +63,8 @@ The Victoria train-count dataset is a stretch goal only if the core is finished 
 - [x] Baselines, LightGBM, validation tuning and ablation, final blend (D12)
 - [x] Test evaluation, error analysis, crowding sensitivity, bootstrap intervals ([RESULTS.md](../reports/RESULTS.md))
 - [x] Streamlit dashboard (5 pages) with smoke tests; checked in headless Chromium
-- [x] Automated tests (pytest) on GitHub Actions, Python 3.11 and 3.12; `python -m transit.verify` checks a rerun against the committed results
+- [x] Automated tests (pytest) on GitHub Actions: Ubuntu with Python 3.11 and 3.12, Windows with Python 3.12; `python -m transit.verify` checks a rerun against the committed results
+- [x] Full rerun from a fresh clone (Linux, Python 3.12) reproduced every committed result ([record](ARCHITECTURE.md#reproduction-record))
 - [x] Architecture document, viva preparation sheet, slide deck draft (claude.ai artifact; private until Jay shares it)
 - [x] Backup demo video recorded (68 s, no narration; saved in Jay's local project folder, not in the repository)
 - [ ] **Jay:** deploy on Streamlit Community Cloud (needs his GitHub sign-in); add the URL to the README

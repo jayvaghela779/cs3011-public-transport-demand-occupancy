@@ -53,7 +53,7 @@ Full provenance, licence and column definitions are in [docs/DATA.md](docs/DATA.
 
 ## Quick start
 
-Requires Python 3.10 or newer. The tests run on Python 3.11 and 3.12 in GitHub Actions. The committed results were produced on Linux with Python 3.13 (pandas 3.0, LightGBM 4.7). A full rerun from a fresh clone with Python 3.12 (pandas 3.1, LightGBM 4.7) reproduced them exactly; see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#reproduction-record). The data build also gives the same table under pandas 2.2. The commands are the same on Windows (PowerShell) and in Google Colab, but the team has not yet run them there.
+Requires Python 3.10 or newer. GitHub Actions runs the tests and `python -m transit.verify` on Ubuntu (Python 3.11 and 3.12) and on Windows (Python 3.12). The committed results were produced on Linux with Python 3.13 (pandas 3.0, LightGBM 4.7). A full rerun from a fresh clone with Python 3.12 (pandas 3.1, LightGBM 4.7) reproduced them exactly; see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#reproduction-record). The data build also gives the same table under pandas 2.2. The commands are the same in Windows PowerShell and in Google Colab. The full pipeline has not yet been run on Windows or Colab, only the tests.
 
 ```bash
 git clone https://github.com/jayvaghela779/cs3011-public-transport-demand-occupancy.git
