@@ -1,9 +1,25 @@
 {
- "source_commit": "2a84de6103ad2a2119cfb4f3c8a6f00915a0df7f",
+ "source_commit": "6bdfded2e3bdb0feff31e92c747cffd96dae4b5d",
  "files": {
   "app/streamlit_app.py": {
-   "bytes": 20597,
-   "sha256": "24dfeda3d715c3b7575e3caac14f92c2948118d079d6f780e8b9a70093f091fa"
+   "bytes": 30140,
+   "sha256": "90159cda07f8526fdd8f0f428aecb2605fbb9c46dbc6c428f259d7dbd6399d55"
+  },
+  "app/design.py": {
+   "bytes": 18092,
+   "sha256": "74b1d995f2a72114fea68ce7dc29cbf22e36f2a430b4df611a5cead2a4309e2e"
+  },
+  "app/fonts/overpass-latin-wght-normal.woff2": {
+   "bytes": 39380,
+   "sha256": "29217ef8adef5f6c059feb461bdb029348205fc233dc9b6ca8604b0d068ac086"
+  },
+  "app/fonts/newsreader-latin-opsz-normal.woff2": {
+   "bytes": 132000,
+   "sha256": "6e4f2958c3a7c4a80acde4e5a679abe7e01bc1e30b92be3c7a8b696ef401d101"
+  },
+  "app/fonts/newsreader-latin-opsz-italic.woff2": {
+   "bytes": 146872,
+   "sha256": "5dfcd10d24af8c82927ba57f7983dd997f7b200594c09c35a1b1ed9fc4597506"
   },
   "src/transit/__init__.py": {
    "bytes": 107,

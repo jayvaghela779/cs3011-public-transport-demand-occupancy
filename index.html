@@ -8,7 +8,7 @@
     <!--
       Public dashboard for CS3011 Group 52, hosted on GitHub Pages.
 
-      This page runs the unchanged Streamlit app (app/streamlit_app.py) inside the
+      This page runs the unchanged Streamlit app (app/streamlit_app.py, styled by app/design.py) inside the
       visitor's browser with stlite (Streamlit on Pyodide, Python compiled to
       WebAssembly). There is no server. .github/workflows/pages.yml copies the app code
       and the committed result files from main next to this page (web/build_site.py),
@@ -20,20 +20,51 @@
     -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.0/build/stlite.css" />
     <style>
-      body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #ffffff; color: #1f2937; }
-      #boot { max-width: 640px; margin: 15vh auto 0; padding: 0 16px; line-height: 1.5; }
-      #boot h1 { font-size: 22px; margin: 0 0 12px; }
-      #boot p { margin: 0 0 10px; font-size: 16px; }
-      #boot .small { font-size: 14px; color: #4b5563; }
+      /* Loading screen, in the dashboard's own type and colours (app/design.py). The font
+         files are the ones the app embeds; they are published next to this page. */
+      @font-face { font-family: "Overpass"; font-weight: 100 900; font-display: swap;
+        src: url("app/fonts/overpass-latin-wght-normal.woff2") format("woff2"); }
+      @font-face { font-family: "Newsreader"; font-weight: 200 800; font-display: swap;
+        src: url("app/fonts/newsreader-latin-opsz-normal.woff2") format("woff2"); }
+      :root { --ink: #17212B; --ink2: #4A5562; --rule: #DCE1E6; --line: #0B6E69; }
+      body { margin: 0; font-family: "Overpass", "Segoe UI", system-ui, -apple-system, sans-serif; background: #ffffff; color: var(--ink); }
+      #boot { max-width: 640px; margin: 14vh auto 0; padding: 0 16px; line-height: 1.5; }
+      #boot .mark { display: flex; gap: 14px; align-items: flex-start; }
+      #boot .bullet { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%; background: var(--line); color: #fff;
+        font: 700 17px/45px "Overpass", system-ui, sans-serif; text-align: center; }
+      #boot h1 { font: 450 30px/1.15 "Newsreader", Georgia, serif; letter-spacing: -0.01em; margin: 0 0 6px; }
+      #boot p { margin: 0 0 12px; font-size: 16px; }
+      #boot .small { font-size: 14px; color: var(--ink2); }
+      #boot a { color: var(--line); }
+      .track { position: relative; height: 22px; margin: 34px 0 6px; }
+      .track .rail, .track .fill { position: absolute; left: 9px; right: 9px; top: 9px; height: 4px; background: var(--rule); }
+      .track .fill { right: auto; width: 0; background: var(--line); transition: width 0.3s ease-out; }
+      .track .stop { position: absolute; top: 2px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%;
+        box-sizing: border-box; background: #fff; border: 3px solid var(--rule); }
+      .track .stop.on { border-color: var(--line); }
+      .stops { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink2); margin-bottom: 18px; }
+      @media (prefers-reduced-motion: reduce) { .track .fill { transition: none; } }
     </style>
   </head>
   <body>
     <div id="root">
       <div id="boot">
-        <h1>AI Based Public Transport Demand and Occupancy Prediction</h1>
-        <p>Loading the dashboard. It runs Python inside your browser, so the first visit downloads about 80 MB: our result files first, then the Python runtime. On a slow connection this takes several minutes; later visits reuse the browser cache and are much faster.</p>
+        <div class="mark">
+          <div class="bullet" aria-hidden="true">52</div>
+          <div>
+            <h1>AI Based Public Transport Demand and Occupancy Prediction</h1>
+            <p class="small">CS3011 Artificial Intelligence, Group 52, PDPM IIITDM Jabalpur</p>
+          </div>
+        </div>
+        <div class="track" aria-hidden="true">
+          <div class="rail"></div><div class="fill" id="fill"></div>
+          <div class="stop on" style="left:9px"></div><div class="stop" id="stop2" style="left:50%"></div>
+          <div class="stop" id="stop3" style="left:calc(100% - 9px)"></div>
+        </div>
+        <div class="stops" aria-hidden="true"><span>Results</span><span>Python runtime</span><span>Dashboard</span></div>
         <p id="progress" class="small" aria-live="polite">Starting.</p>
-        <p class="small">CS3011 Artificial Intelligence, Group 52, PDPM IIITDM Jabalpur. Code and results:
+        <p>The dashboard runs Python inside your browser, so the first visit downloads about 80 MB: our result files first, then the Python runtime. On a slow connection this takes several minutes; later visits reuse the browser cache and are much faster.</p>
+        <p class="small">Code and results:
           <a href="https://github.com/jayvaghela779/cs3011-public-transport-demand-occupancy">github.com/jayvaghela779/cs3011-public-transport-demand-occupancy</a>.
           Needs a recent Chrome, Edge, Firefox or Safari with JavaScript enabled.</p>
       </div>
@@ -66,6 +97,10 @@
       // Every file the app reads. tests/test_web.py checks this list against the app's imports and paths.
       const FILES = [
         "app/streamlit_app.py",
+        "app/design.py",
+        "app/fonts/overpass-latin-wght-normal.woff2",
+        "app/fonts/newsreader-latin-opsz-normal.woff2",
+        "app/fonts/newsreader-latin-opsz-italic.woff2",
         "src/transit/__init__.py",
         "src/transit/crowding.py",
         "src/transit/metrics.py",
@@ -92,6 +127,9 @@
 
       const progress = document.getElementById("progress");
       const say = (t) => { if (progress) progress.textContent = t; };
+      // Loading line: 0 to 50% while the results download, then the Python runtime.
+      const fill = (f) => { const el = document.getElementById("fill"); if (el) el.style.width = `calc((100% - 18px) * ${f})`; };
+      const reach = (id) => { const el = document.getElementById(id); if (el) el.classList.add("on"); };
       const mb = (n) => (n / 1e6).toFixed(1);
 
       async function hex(buf) {
@@ -154,6 +192,7 @@
             files[f] = await getFile(f, manifest.files[f], (k) => {
               done += k;
               say(`Downloading results: ${mb(done)} of ${mb(total)} MB.`);
+              fill(0.5 * Math.max(0, Math.min(1, done / total)));
             });
           }
         };
@@ -167,6 +206,8 @@
           return SITE + "wheels/" + w;
         }));
         say("Results downloaded and checked. Starting Python.");
+        fill(0.5);
+        reach("stop2");
 
         const { mount } = await import(STLITE + "stlite.js");
         mount(
@@ -175,9 +216,24 @@
             requirements: wheelUrls,
             pyodideUrl: PYODIDE,
             files: Object.fromEntries(FILES.map((f) => [f, files[f]])),
+            // Theme: the same values as .streamlit/config.toml (tests/test_web.py checks this).
             streamlitConfig: {
               "client.toolbarMode": "viewer",
               "browser.gatherUsageStats": false,
+              "theme.base": "light",
+              "theme.primaryColor": "#0B6E69",
+              "theme.backgroundColor": "#FFFFFF",
+              "theme.secondaryBackgroundColor": "#F3F5F7",
+              "theme.textColor": "#17212B",
+              "theme.linkColor": "#0B6E69",
+              "theme.borderColor": "#DCE1E6",
+              "theme.showWidgetBorder": true,
+              "theme.baseRadius": "6px",
+              "theme.font": "Overpass, Segoe UI, system-ui, sans-serif",
+              "theme.headingFont": "Newsreader, Georgia, serif",
+              "theme.dataframeHeaderBackgroundColor": "#F3F5F7",
+              "theme.sidebar.backgroundColor": "#F3F5F7",
+              "theme.sidebar.secondaryBackgroundColor": "#FFFFFF",
             },
           },
           document.getElementById("root"),
