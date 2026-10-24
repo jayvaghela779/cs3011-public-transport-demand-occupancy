@@ -97,3 +97,39 @@ def test_page_loads_files_from_its_own_site():
     assert "https://raw.githubusercontent.com" not in html, "serve files from the Pages site (same origin)"
     assert "site-manifest.json" in html and "crypto.subtle.digest" in html, "check files against the manifest"
     assert "@gh-pages/" in html, "the CDN mirror must point at the published branch, not main"
+
+
+def test_app_local_modules_and_fonts_are_listed():
+    """The app imports app/design.py, which embeds the fonts in app/fonts; the public build needs all of them."""
+    files = set(listed_files())
+    app_dir = config.ROOT / "app"
+    tree = ast.parse(APP.read_text(encoding="utf-8"))
+    local = {a.name for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names
+             if (app_dir / f"{a.name}.py").is_file()}
+    assert "design" in local
+    for m in local:
+        assert f"app/{m}.py" in files, f"app/{m}.py (imported by the app) is not listed in web/index.html"
+    design = (app_dir / "design.py").read_text(encoding="utf-8")
+    fonts = set(re.findall(r'"([\w.-]+\.woff2)"', design))
+    assert fonts, "design.py should name its font files"
+    for f in fonts:
+        assert (app_dir / "fonts" / f).is_file(), f
+        assert f"app/fonts/{f}" in files, f"app/fonts/{f} is not listed in web/index.html"
+
+
+def test_theme_matches_between_local_app_and_public_build():
+    """.streamlit/config.toml (local app) and web/index.html (public build) must set the same theme."""
+    tomllib = __import__("tomllib")
+    cfg = tomllib.loads((config.ROOT / ".streamlit" / "config.toml").read_text(encoding="utf-8"))
+    local = {f"theme.{k}": v for k, v in cfg["theme"].items() if k != "sidebar"}
+    local |= {f"theme.sidebar.{k}": v for k, v in cfg["theme"].get("sidebar", {}).items()}
+    local["client.toolbarMode"] = cfg["client"]["toolbarMode"]
+    html = INDEX.read_text(encoding="utf-8")
+    block = re.search(r"streamlitConfig: \{(.*?)\}", html, re.S).group(1)
+    web = {k: json.loads(v) for k, v in re.findall(r'"((?:theme|client)\.[\w.]+)":\s*("[^"]*"|true|false)', block)}
+    assert web == local
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("design", config.ROOT / "app" / "design.py")
+    design = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(design)
+    assert local["theme.primaryColor"] == design.LINE and local["theme.textColor"] == design.INK
