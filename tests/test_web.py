@@ -75,6 +75,12 @@ def test_build_site_copies_every_listed_file(tmp_path):
         sys.path.pop(0)
     files = build_site.build(tmp_path)
     assert (tmp_path / "index.html").read_text(encoding="utf-8") == INDEX.read_text(encoding="utf-8")
+    manifest = json.loads((tmp_path / "site-manifest.json").read_text(encoding="utf-8"))
+    assert set(manifest["files"]) == set(files)
+    import hashlib
+    for f, info in manifest["files"].items():
+        data = (config.ROOT / f).read_bytes()
+        assert info == {"bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}, f
     assert (tmp_path / ".nojekyll").exists()      # without it GitHub Pages drops __init__.py
     for f in files:
         assert (tmp_path / f).read_bytes() == (config.ROOT / f).read_bytes(), f
@@ -83,4 +89,5 @@ def test_build_site_copies_every_listed_file(tmp_path):
 def test_page_loads_files_from_its_own_site():
     html = INDEX.read_text(encoding="utf-8")
     assert "https://raw.githubusercontent.com" not in html, "serve files from the Pages site (same origin)"
-    assert "new URL(f, document.baseURI)" in html
+    assert "site-manifest.json" in html and "crypto.subtle.digest" in html, "check files against the manifest"
+    assert "@gh-pages/" in html, "the CDN mirror must point at the published branch, not main"
