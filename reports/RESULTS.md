@@ -58,12 +58,12 @@ last week 25.68%. Blend weights tried on validation:
 
 | Segment | Rows | Final WAPE | Historical avg WAPE | Last-week WAPE |
 | --- | --- | --- | --- | --- |
-| am peak 06-08 | 21,333 | 15.75% | 15.65% | 19.82% |
 | early 03-05 | 9,318 | 13.80% | 13.99% | 17.34% |
-| evening 20-23 | 22,401 | 26.72% | 27.13% | 35.00% |
+| am peak 06-08 | 21,333 | 15.75% | 15.65% | 19.82% |
 | midday 09-15 | 45,682 | 19.15% | 19.37% | 25.90% |
-| night 00-02 | 2,237 | 82.58% | 83.03% | 102.69% |
 | pm peak 16-19 | 26,964 | 18.25% | 18.65% | 23.50% |
+| evening 20-23 | 22,401 | 26.72% | 27.13% | 35.00% |
+| night 00-02 | 2,237 | 82.58% | 83.03% | 102.69% |
 
 ![By period](figures/demand_wape_by_period.png)
 
@@ -83,8 +83,8 @@ Regular vs non-regular cells (non-regular = observed in an hour the route does n
 
 | Segment | Rows | Final WAPE | Historical avg WAPE | Last-week WAPE |
 | --- | --- | --- | --- | --- |
-| False | 2,254 | 55.83% | 58.26% | 69.16% |
-| True | 125,681 | 18.08% | 18.28% | 23.59% |
+| non-regular cell | 2,254 | 55.83% | 58.26% | 69.16% |
+| regular cell | 125,681 | 18.08% | 18.28% | 23.59% |
 
 Worst test day: 2024-04-21 (final WAPE 32.21%). Best: 2024-04-23
 (15.54%).
@@ -101,7 +101,7 @@ Route-directions with the largest total absolute error (final forecast):
 | 1007 | I | 278 | 14.15% | 0.59% |
 | 1007 | V | 276 | 16.02% | 0.57% |
 
-Hours with zero recorded boardings (5,165 test rows): model MAE
+Hours with zero recorded boardings (5,165 test rows): final-forecast MAE
 2.95, last-week MAE 2.81.
 
 ![Example](figures/example_route_day.png)

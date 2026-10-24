@@ -27,6 +27,15 @@ NAMES = {"ensemble": "Final: LightGBM + historical average", "model": "LightGBM 
          "seasonal_naive": "Same hour last week",
          "dow4_mean": "Mean of last 4 same weekdays", "hist_average": "Historical average"}
 ORDER = ["ensemble", "model", "seasonal_naive", "dow4_mean", "hist_average"]
+PERIOD_ORDER = ["early 03-05", "am peak 06-08", "midday 09-15", "pm peak 16-19", "evening 20-23", "night 00-02"]
+SEG_LABELS = {"True": "regular cell", "False": "non-regular cell"}
+
+
+def ordered(keys) -> list:
+    keys = list(keys)
+    if set(keys) <= set(PERIOD_ORDER):
+        return [k for k in PERIOD_ORDER if k in keys]
+    return keys
 COL = {"ensemble": "#1d4ed8", "model": "#60a5fa", "seasonal_naive": "#d97706", "dow4_mean": "#059669", "hist_average": "#7c3aed"}
 
 
@@ -61,7 +70,7 @@ def fig_wape(metrics: dict) -> None:
 
 def fig_periods(metrics: dict) -> None:
     seg = metrics["targets"]["demand"]["segments_test"]["period"]
-    cats = list(seg["ensemble"])
+    cats = ordered(seg["ensemble"])
     x = np.arange(len(cats))
     fig, ax = plt.subplots(figsize=(9, 3.4))
     for i, k in enumerate(("ensemble", "seasonal_naive")):
@@ -194,8 +203,8 @@ def main() -> None:
 
     def segtab(s):
         rows = ["| Segment | Rows | Final WAPE | Historical avg WAPE | Last-week WAPE |", "| --- | --- | --- | --- | --- |"]
-        for k in s["ensemble"]:
-            rows.append(f"| {k} | {s['ensemble'][k]['n']:,} | {pct(s['ensemble'][k]['wape'])} | "
+        for k in ordered(s["ensemble"]):
+            rows.append(f"| {SEG_LABELS.get(k, k)} | {s['ensemble'][k]['n']:,} | {pct(s['ensemble'][k]['wape'])} | "
                         f"{pct(s['hist_average'][k]['wape'])} | {pct(s['seasonal_naive'][k]['wape'])} |")
         return "\n".join(rows)
 
@@ -298,7 +307,7 @@ Route-directions with the largest total absolute error (final forecast):
 | --- | --- | --- | --- | --- |
 {chr(10).join(f"| {r['route']} | {r['direction']} | {int(r['rows'])} | {pct(r['wape'])} | {pct(r['share_of_total_error'])} |" for r in worst_rd)}
 
-Hours with zero recorded boardings ({zero.get('ensemble', {}).get('n', 0):,} test rows): model MAE
+Hours with zero recorded boardings ({zero.get('ensemble', {}).get('n', 0):,} test rows): final-forecast MAE
 {zero.get('ensemble', {}).get('mae', float('nan')):.2f}, last-week MAE {zero.get('seasonal_naive', {}).get('mae', float('nan')):.2f}.
 
 ![Example](figures/example_route_day.png)

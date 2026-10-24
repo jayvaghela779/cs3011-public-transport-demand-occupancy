@@ -175,7 +175,8 @@ def page_comparison(metrics: dict) -> None:
     c1, c2 = st.columns(2)
     for col, key, title in ((c1, "period", "WAPE by time of day"), (c2, "volume_tercile", "WAPE by route volume")):
         s = seg[key]
-        cats = list(s["ensemble"])
+        order = ["early 03-05", "am peak 06-08", "midday 09-15", "pm peak 16-19", "evening 20-23", "night 00-02"]
+        cats = [c for c in order if c in s["ensemble"]] if key == "period" else list(s["ensemble"])
         fig = go.Figure([go.Bar(name=NAMES[p], x=cats, y=[s[p][c]["wape"] for c in cats],
                                 marker_color=COLOURS[p]) for p in ("ensemble", "hist_average", "seasonal_naive")])
         fig.update_layout(barmode="group", height=320, title=title, yaxis_tickformat=".0%",

@@ -52,7 +52,7 @@ Full provenance, licence and column definitions are in [docs/DATA.md](docs/DATA.
 
 ## Quick start
 
-Requires Python 3.10 or newer. Works in Google Colab, on Linux, and on Windows (PowerShell).
+Requires Python 3.10 or newer. Works in Google Colab, on Linux, and on Windows (PowerShell). Tested with Python 3.11, 3.12 (GitHub Actions) and 3.13; pandas 2.2 and 3.0; LightGBM 4.7, scikit-learn 1.9, Streamlit 1.66.
 
 ```bash
 git clone https://github.com/jayvaghela779/cs3011-public-transport-demand-occupancy.git
@@ -72,7 +72,7 @@ python -m transit.models.run
 # 4. Write reports/RESULTS.md and figures (stops if numbers disagree)
 python -m transit.report
 
-# 5. Run the tests (68), then the dashboard
+# 5. Run the tests, then the dashboard
 pytest
 streamlit run app/streamlit_app.py
 ```
@@ -81,7 +81,7 @@ The dashboard reads only committed files, so `pip install -r requirements.txt` a
 
 ## Deployment (free)
 
-On [Streamlit Community Cloud](https://share.streamlit.io): sign in with GitHub, choose **Create app**, pick this repository, branch `main`, main file `app/streamlit_app.py`, then deploy. The app sleeps after 12 hours without visitors; open it about 30 minutes before a demo to wake it. **Fallback:** run it locally with the command above. A recorded demo video is the last resort.
+On [Streamlit Community Cloud](https://share.streamlit.io): sign in with GitHub, choose **Create app**, pick this repository, branch `main`, main file `app/streamlit_app.py`, then deploy. The app sleeps after 12 hours without visitors; open it about 30 minutes before a demo to wake it. **Fallback:** run it locally with the command above. A recorded 68-second walkthrough of all five pages is the last resort; keep it on the demo laptop.
 
 Raw files are cached in `data/raw/` and are never committed.
 
