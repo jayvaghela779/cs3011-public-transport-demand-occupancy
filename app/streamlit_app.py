@@ -26,9 +26,10 @@ from transit.metrics import regression_metrics  # noqa: E402
 TITLE = "AI Based Public Transport Demand and Occupancy Prediction"
 PRED = ROOT / "data" / "predictions"
 METRICS = ROOT / "reports" / "metrics.json"
-NAMES = {"model": "LightGBM model", "seasonal_naive": "Same hour last week",
+NAMES = {"ensemble": "Final forecast (LightGBM + historical average)", "model": "LightGBM alone",
+         "seasonal_naive": "Same hour last week",
          "dow4_mean": "Mean of last 4 same weekdays", "hist_average": "Historical average (same day type)"}
-COLOURS = {"target": "#1f2937", "model": "#2563eb", "seasonal_naive": "#d97706",
+COLOURS = {"target": "#1f2937", "ensemble": "#1d4ed8", "model": "#60a5fa", "seasonal_naive": "#d97706",
            "dow4_mean": "#059669", "hist_average": "#7c3aed"}
 LEVEL_COLOURS = {"low": "#16a34a", "medium": "#eab308", "high": "#dc2626"}
 ESTIMATE_NOTE = ("**Occupancy here means estimated on-board load.** SUNT infers alightings from "
@@ -63,7 +64,7 @@ def fmt_pct(x: float) -> str:
     return f"{100 * x:.1f}%"
 
 
-def metrics_table(block: dict, keys=("model", "seasonal_naive", "dow4_mean", "hist_average")) -> pd.DataFrame:
+def metrics_table(block: dict, keys=("ensemble", "model", "seasonal_naive", "dow4_mean", "hist_average")) -> pd.DataFrame:
     rows = []
     sn = block["seasonal_naive"]["wape"]
     for k in keys:
@@ -81,11 +82,11 @@ def day_chart(df: pd.DataFrame, value_name: str, capacity: float | None = None) 
     miss = df[df["status"] != "observed"]
     fig.add_trace(go.Scatter(x=obs["ts_hour"], y=obs["target"], mode="lines+markers", name="Actual (SUNT)",
                              line=dict(color=COLOURS["target"], width=3)))
-    for k in ("model", "seasonal_naive"):
+    for k in ("ensemble", "seasonal_naive"):
         fig.add_trace(go.Scatter(x=df["ts_hour"], y=df[k], mode="lines+markers", name=NAMES[k],
-                                 line=dict(color=COLOURS[k], dash="solid" if k == "model" else "dot")))
+                                 line=dict(color=COLOURS[k], dash="solid" if k == "ensemble" else "dot")))
     if len(miss):
-        fig.add_trace(go.Scatter(x=miss["ts_hour"], y=miss["model"], mode="markers", name="No SUNT record (not scored)",
+        fig.add_trace(go.Scatter(x=miss["ts_hour"], y=miss["ensemble"], mode="markers", name="No SUNT record (not scored)",
                                  marker=dict(symbol="circle-open", size=12, color="#6b7280")))
     if capacity:
         for frac, lab in zip(THRESHOLDS, ("medium from", "high from")):
@@ -100,8 +101,8 @@ def page_explorer(metrics: dict) -> None:
     st.subheader("Forecast explorer")
     st.caption("Day-ahead forecasts made before each service day starts, using only earlier days.")
     c1, c2, c3 = st.columns([1, 1.2, 1])
-    split = c1.radio("Period", ["test", "valid"], format_func=lambda s: {
-        "test": "Test, 15–28 Apr 2024", "valid": "Validation, 8–14 Apr 2024"}[s])
+    periods = {"Test, 15–28 Apr 2024": "test", "Validation, 8–14 Apr 2024": "valid"}
+    split = periods[c1.radio("Period", list(periods))]
     options = route_options(split)
     choice = c2.selectbox("Route · direction (busiest first)", options, index=0)
     route, direction = [x.strip() for x in choice.split("·")]
@@ -123,17 +124,17 @@ def page_explorer(metrics: dict) -> None:
     a, b, c = st.columns(3)
     a.metric("Boardings that day (observed hours)", f"{obs['target'].sum():,.0f}")
     if len(obs):
-        a2 = regression_metrics(obs["target"], obs["model"])
+        a2 = regression_metrics(obs["target"], obs["ensemble"])
         b2 = regression_metrics(obs["target"], obs["seasonal_naive"])
-        b.metric("Model WAPE this day", fmt_pct(a2["wape"]))
+        b.metric("Final forecast WAPE this day", fmt_pct(a2["wape"]))
         c.metric("Last-week WAPE this day", fmt_pct(b2["wape"]))
     st.markdown("**Hourly boardings**")
-    st.plotly_chart(day_chart(d1, "Boardings per hour"), use_container_width=True)
+    st.plotly_chart(day_chart(d1, "Boardings per hour"), width="stretch")
     st.markdown("**Estimated peak load per bus** (mean over the hour's trips of each trip's highest estimated load)")
-    st.plotly_chart(day_chart(l1, "Estimated passengers on board", capacity=cap), use_container_width=True)
+    st.plotly_chart(day_chart(l1, "Estimated passengers on board", capacity=cap), width="stretch")
 
     if len(l1):
-        strip = l1.assign(Actual=crowding_level(l1["target"], cap), Forecast=crowding_level(l1["model"], cap))
+        strip = l1.assign(Actual=crowding_level(l1["target"], cap), Forecast=crowding_level(l1["ensemble"], cap))
         strip["Hour"] = strip["ts_hour"].dt.strftime("%H:00")
         st.markdown(f"**Crowding level by hour** (capacity {cap}; low < {THRESHOLDS[0]:.0%}, "
                     f"high ≥ {THRESHOLDS[1]:.0%} of capacity)")
@@ -141,7 +142,7 @@ def page_explorer(metrics: dict) -> None:
 
         def colour(v):
             return f"background-color: {LEVEL_COLOURS.get(v, '#e5e7eb')}; color: white" if v else ""
-        st.dataframe(show.style.map(colour), use_container_width=True)
+        st.dataframe(show.style.map(colour), width="stretch")
     if (d1["status"] != "observed").any():
         st.caption("Open circles: hours this route normally runs but SUNT has no record that day. "
                    "They are treated as missing data, not zero demand, and are not scored (decision D8).")
@@ -155,60 +156,62 @@ def page_comparison(metrics: dict) -> None:
                          ("load", "Estimated load: mean peak load per bus per route-hour")):
         r = metrics["targets"][short]
         st.markdown(f"**{label}**")
-        st.dataframe(metrics_table(r["test"]), hide_index=True, use_container_width=True)
+        st.dataframe(metrics_table(r["test"]), hide_index=True, width="stretch")
     with st.expander("Check: recompute the test metrics from the committed prediction files"):
         rows = []
         for short in ("demand", "load"):
             df = load_predictions(f"{short}_test")
             df = df[df["target"].notna()]
-            for k in ("model", "seasonal_naive", "dow4_mean", "hist_average"):
+            for k in ("ensemble", "model", "seasonal_naive", "dow4_mean", "hist_average"):
                 re = regression_metrics(df["target"], df[k])
                 stored = metrics["targets"][short]["test"][k]
                 rows.append({"Target": short, "Method": NAMES[k], "Recomputed WAPE": round(re["wape"], 6),
                              "Reported WAPE": round(stored["wape"], 6),
                              "Match": bool(np.isclose(re["wape"], stored["wape"]) and re["n"] == stored["n"])})
-        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
 
     short = st.radio("Error breakdown for", ["demand", "load"], horizontal=True)
     seg = metrics["targets"][short]["segments_test"]
     c1, c2 = st.columns(2)
     for col, key, title in ((c1, "period", "WAPE by time of day"), (c2, "volume_tercile", "WAPE by route volume")):
         s = seg[key]
-        cats = list(s["model"])
+        cats = list(s["ensemble"])
         fig = go.Figure([go.Bar(name=NAMES[p], x=cats, y=[s[p][c]["wape"] for c in cats],
-                                marker_color=COLOURS[p]) for p in ("model", "seasonal_naive")])
+                                marker_color=COLOURS[p]) for p in ("ensemble", "hist_average", "seasonal_naive")])
         fig.update_layout(barmode="group", height=320, title=title, yaxis_tickformat=".0%",
                           margin=dict(l=10, r=10, t=40, b=10), legend=dict(orientation="h", y=-0.3))
-        col.plotly_chart(fig, use_container_width=True)
+        col.plotly_chart(fig, width="stretch")
     byday = pd.DataFrame(seg["by_day"]).T
     byday.index = pd.to_datetime(byday.index)
-    fig = go.Figure([go.Scatter(x=byday.index, y=byday["model_wape"], name=NAMES["model"], mode="lines+markers",
-                                line=dict(color=COLOURS["model"])),
+    fig = go.Figure([go.Scatter(x=byday.index, y=byday["ensemble_wape"], name=NAMES["ensemble"], mode="lines+markers",
+                                line=dict(color=COLOURS["ensemble"])),
+                     go.Scatter(x=byday.index, y=byday["ha_wape"], name=NAMES["hist_average"], mode="lines+markers",
+                                line=dict(color=COLOURS["hist_average"], dash="dash")),
                      go.Scatter(x=byday.index, y=byday["sn_wape"], name=NAMES["seasonal_naive"], mode="lines+markers",
                                 line=dict(color=COLOURS["seasonal_naive"], dash="dot"))])
     fig.update_layout(height=300, title="WAPE by test day", yaxis_tickformat=".0%",
                       margin=dict(l=10, r=10, t=40, b=10), legend=dict(orientation="h", y=-0.3))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
     worst = pd.DataFrame(seg["worst_route_directions"])[["route", "direction", "wape", "share_of_total_error", "rows"]]
     worst["wape"] = worst["wape"].map(fmt_pct)
     worst["share_of_total_error"] = worst["share_of_total_error"].map(fmt_pct)
-    st.markdown("**Route-directions with the largest total error (model)**")
-    st.dataframe(worst, hide_index=True, use_container_width=True)
+    st.markdown("**Route-directions with the largest total error (final forecast)**")
+    st.dataframe(worst, hide_index=True, width="stretch")
 
     r = metrics["targets"][short]
-    st.markdown("**How the model was chosen (validation week)**")
+    st.markdown(f"**How LightGBM was chosen (validation week).** The final forecast blends it 50/50 with the historical average; the weight {r['blend']['weight_on_lightgbm']} was chosen on validation.")
     tun = pd.DataFrame(r["tuning"])[["objective", "num_leaves", "best_iteration", "mae", "wape"]]
     tun["wape"] = tun["wape"].map(fmt_pct)
-    st.dataframe(tun, hide_index=True, use_container_width=True)
+    st.dataframe(tun, hide_index=True, width="stretch")
     abl = pd.DataFrame(r["ablation_valid"]).T[["mae", "wape"]]
     abl["wape"] = abl["wape"].map(fmt_pct)
     st.markdown("**Feature-group ablation (validation week)**")
-    st.dataframe(abl, use_container_width=True)
+    st.dataframe(abl, width="stretch")
     imp = pd.Series(r["feature_importance_gain_share"]).head(12)[::-1]
     fig = go.Figure(go.Bar(x=imp.values, y=imp.index, orientation="h", marker_color=COLOURS["model"]))
     fig.update_layout(height=360, title="Feature importance (share of total gain)", xaxis_tickformat=".0%",
                       margin=dict(l=10, r=10, t=40, b=10))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def page_crowding(metrics: dict) -> None:
@@ -224,24 +227,24 @@ def page_crowding(metrics: dict) -> None:
     for name, res in ct.items():
         rows.append({"Scenario": f"{name} ({res['capacity']})",
                      **{f"Actual {k}": fmt_pct(v) for k, v in res["actual_shares"].items()},
-                     **{f"Macro-F1 {NAMES[p].split(' (')[0]}": round(res[p]["macro_f1"], 3)
-                        for p in ("model", "seasonal_naive", "hist_average")},
-                     "High: precision (model)": round(res["model"]["per_class"]["high"]["precision"], 3),
-                     "High: recall (model)": round(res["model"]["per_class"]["high"]["recall"], 3)})
+                     **{f"Macro-F1: {NAMES[p].split(' (')[0]}": round(res[p]["macro_f1"], 3)
+                        for p in ("ensemble", "seasonal_naive", "hist_average")},
+                     "High: precision (final)": round(res["ensemble"]["per_class"]["high"]["precision"], 3),
+                     "High: recall (final)": round(res["ensemble"]["per_class"]["high"]["recall"], 3)})
     st.markdown("**Test weeks, every capacity scenario**")
-    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
     name = st.selectbox("Confusion matrix for scenario", list(ct), index=list(ct).index("basico"))
-    cm = np.array(ct[name]["model"]["confusion"]["matrix"])
+    cm = np.array(ct[name]["ensemble"]["confusion"]["matrix"])
     fig = go.Figure(go.Heatmap(z=cm, x=[f"pred {l}" for l in LEVELS], y=[f"actual {l}" for l in LEVELS],
                                text=cm, texttemplate="%{text}", colorscale="Blues", showscale=False))
     fig.update_layout(height=320, margin=dict(l=10, r=10, t=10, b=10), yaxis_autorange="reversed")
-    st.plotly_chart(fig, use_container_width=True)
-    burst = metrics["targets"]["load"]["segments_test"]["burst_hours"]["model"]
+    st.plotly_chart(fig, width="stretch")
+    burst = metrics["targets"]["load"]["segments_test"]["burst_hours"]["ensemble"]
     st.markdown("**Hours with burst validations** (a single stop with more than 100 boardings; almost all at "
                 "terminal stations at peak times). They are kept, not capped, and reported separately:")
     st.dataframe(pd.DataFrame({("With burst" if k == "True" else "Without burst"):
                                {"MAE": round(v["mae"], 2), "WAPE": fmt_pct(v["wape"]), "Rows": v["n"]}
-                               for k, v in burst.items()}).T, use_container_width=True)
+                               for k, v in burst.items()}).T, width="stretch")
 
 
 def page_forecast(metrics: dict) -> None:
@@ -261,7 +264,7 @@ def page_forecast(metrics: dict) -> None:
     show = top.assign(Hour=top["ts_hour"].dt.strftime("%H:00"))[
         ["route", "direction", "Hour", "demand_forecast", "load_forecast"]].head(25)
     show.columns = ["Route", "Dir", "Hour", "Boardings forecast", "Est. peak load forecast"]
-    st.dataframe(show.round(1), hide_index=True, use_container_width=True)
+    st.dataframe(show.round(1), hide_index=True, width="stretch")
     st.caption("Use: these are the hours to check first for extra trips or larger vehicles. Validated "
                "precision and recall of the high level are on the Crowding page.")
     options = (f.groupby(["route", "direction"])["demand_forecast"].sum().sort_values(ascending=False))
@@ -275,7 +278,7 @@ def page_forecast(metrics: dict) -> None:
     fig.update_layout(height=360, yaxis=dict(title="Boardings"),
                       yaxis2=dict(title="Estimated load", overlaying="y", side="right"),
                       margin=dict(l=10, r=10, t=10, b=10), legend=dict(orientation="h", y=-0.25))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def page_data(metrics: dict) -> None:
