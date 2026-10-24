@@ -24,7 +24,7 @@ import pandas as pd
 
 from transit.config import ROOT
 
-VOLATILE = {"runtime_seconds"}
+VOLATILE = {"runtime_seconds", "seconds"}   # wall-clock times
 TOLERANCE = 1e-6   # relative, on every number
 
 
@@ -97,7 +97,7 @@ def main(argv: list[str]) -> int:
         print(f"{len(diffs)} of {n} values differ:")
         print("\n".join(f"  {d}" for d in diffs[:50]))
         return 1
-    print(f"Reproduced: all {n} values match (relative tolerance {TOLERANCE:g}; run time ignored).")
+    print(f"Reproduced: all {n} values match (relative tolerance {TOLERANCE:g}; run times ignored).")
     return 0
 
 

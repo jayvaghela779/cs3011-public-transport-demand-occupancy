@@ -53,7 +53,7 @@ Full provenance, licence and column definitions are in [docs/DATA.md](docs/DATA.
 
 ## Quick start
 
-Requires Python 3.10 or newer. Works in Google Colab, on Linux, and on Windows (PowerShell). Tested with Python 3.11, 3.12 (GitHub Actions) and 3.13; pandas 2.2 and 3.0; LightGBM 4.7, scikit-learn 1.9, Streamlit 1.66.
+Requires Python 3.10 or newer. The tests run on Python 3.11 and 3.12 in GitHub Actions. The committed results were produced on Linux with Python 3.13 (pandas 3.0, LightGBM 4.7). A full rerun from a fresh clone with Python 3.12 (pandas 3.1, LightGBM 4.7) reproduced them exactly; see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#reproduction-record). The data build also gives the same table under pandas 2.2. The commands are the same on Windows (PowerShell) and in Google Colab, but the team has not yet run them there.
 
 ```bash
 git clone https://github.com/jayvaghela779/cs3011-public-transport-demand-occupancy.git
@@ -67,13 +67,16 @@ python -m transit.data.download
 # 2. Build the route x direction x hour table and the quality report
 python -m transit.data.build
 
-# 3. Train, tune on validation, score test once, forecast 29 Apr (about 6 min on 2 CPUs)
+# 3. Train, tune on validation, score test, forecast 29 Apr (about 8 min on 2 CPUs)
 python -m transit.models.run
 
 # 4. Write reports/RESULTS.md and figures (stops if numbers disagree)
 python -m transit.report
 
-# 5. Run the tests, then the dashboard
+# 5. Check the rerun against the committed table and metrics
+python -m transit.verify
+
+# 6. Run the tests, then the dashboard
 pytest
 streamlit run app/streamlit_app.py
 ```
@@ -84,12 +87,12 @@ The dashboard reads only committed files, so `pip install -r requirements.txt` a
 
 On [Streamlit Community Cloud](https://share.streamlit.io): sign in with GitHub, choose **Create app**, pick this repository, branch `main`, main file `app/streamlit_app.py`, then deploy. The app sleeps after 12 hours without visitors; open it about 30 minutes before a demo to wake it. **Fallback:** run it locally with the command above. A recorded 68-second walkthrough of all five pages is the last resort; keep it on the demo laptop.
 
-Raw files are cached in `data/raw/` and are never committed.
+Raw files are cached in `data/raw/` and are never committed. To reproduce everything in a browser, open [`notebooks/reproduce_on_colab.ipynb`](notebooks/reproduce_on_colab.ipynb) in Google Colab (not yet tried by the team).
 
 ## Repository layout
 
 ```
-docs/                 plan, decisions (D1-D12), data card, architecture, viva preparation
+docs/                 plan, decisions (D1-D13), data card, architecture, viva preparation
 data/manifest/        pinned list of SUNT source files with SHA-256 checksums
 data/raw/             downloaded SUNT files (git-ignored)
 data/processed/       route-hour table and quality report

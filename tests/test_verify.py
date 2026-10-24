@@ -2,7 +2,7 @@ from transit.verify import differences, flatten
 
 
 def test_flatten_skips_run_time_and_indexes_lists():
-    f = flatten({"a": {"b": 1.0, "runtime_seconds": 9}, "c": [1, {"d": "x"}]})
+    f = flatten({"a": {"b": 1.0, "runtime_seconds": 9, "seconds": 2.5}, "c": [1, {"d": "x"}]})
     assert f == {"a.b": 1.0, "c.0": 1, "c.1.d": "x"}
 
 

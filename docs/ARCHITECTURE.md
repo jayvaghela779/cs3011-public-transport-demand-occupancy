@@ -56,3 +56,19 @@ src/transit/
   verify.py           compare a rerun with the committed table and metrics
 app/streamlit_app.py  dashboard
 ```
+
+## Reproduction record
+
+**24 Oct 2026, fresh clone of `main` at `d3e94af`, Linux, 2 CPU threads, Python 3.12.3, pandas 3.1.0, pyarrow 26.0.0, LightGBM 4.7.0** (the committed results were made with Python 3.13 and pandas 3.0.5):
+
+| Step | Result |
+| --- | --- |
+| `transit.data.download` | 59 files downloaded, all SHA-256 checksums matched |
+| `transit.data.build` | all 6 quality checks passed; table identical to the committed one in every cell (541,611 rows × 12 columns) |
+| `transit.models.run` | 479 s; all 2,326 numbers in `metrics.json` identical to the committed file (only wall-clock times differ) |
+| Prediction files | all 5 identical in content to the committed files |
+| `transit.report` | `RESULTS.md` and `planning.json` byte-identical to the committed files |
+| `pytest` | 77 passed |
+
+The whole sequence took about 11 minutes. The parquet files differ in bytes only in their metadata (which records the pandas version), not in content. Not yet repeated on Windows or Colab.
+
