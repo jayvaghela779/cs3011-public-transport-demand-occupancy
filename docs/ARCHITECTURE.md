@@ -11,6 +11,7 @@ flowchart LR
     E -->|"models/run.py<br/>tune on validation,<br/>score test (D12)"| F["metrics.json<br/>predictions/*.parquet"]
     F -->|"transit.report"| G["RESULTS.md<br/>figures"]
     F --> H["Streamlit app<br/>(reads committed files only)"]
+    H -->|"web/build_site.py<br/>pages workflow"| I["GitHub Pages<br/>same app in the browser (stlite)"]
 ```
 
 ## Stages
@@ -25,6 +26,7 @@ flowchart LR
 | Report | `python -m transit.report` | metrics and predictions | `reports/RESULTS.md`, `reports/figures/*.png` | stops if metrics and predictions disagree |
 | Dashboard | `streamlit run app/streamlit_app.py` | metrics and predictions | nothing | `test_app.py` (every page renders) |
 | Verify a rerun | `python -m transit.verify` | rebuilt table and metrics, committed versions from git | nothing | `test_verify.py` |
+| Publish the public site | `python web/build_site.py OUT` (run by `.github/workflows/pages.yml`) | `web/index.html` and the files it lists | the `gh-pages` branch: page, app code, results, SHA-256 manifest, pinned wheels | `test_web.py` |
 
 ## Key design choices
 
@@ -55,6 +57,7 @@ src/transit/
   report.py           RESULTS.md and figures
   verify.py           compare a rerun with the committed table and metrics
 app/streamlit_app.py  dashboard
+web/                  public in-browser build (index.html, build_site.py, wheels.txt)
 ```
 
 ## Reproduction record

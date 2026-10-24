@@ -12,8 +12,9 @@ Tick an item only when its evidence exists. Last updated 24 Oct 2026.
 
 | # | Action | Owner | Prerequisite | Evidence it is done | Who | By |
 | --- | --- | --- | --- | --- | --- | --- |
-| A1 | Deploy the dashboard on Streamlit Community Cloud ([runbook §5](DEMO_RUNBOOK.md#5-streamlit-community-cloud-deployment-checklist-jay-only)) | Jay | Jay's GitHub sign-in on share.streamlit.io | The URL opens all five pages; the recompute check shows every row matching | Human (needs Jay's sign-in) | 30 Oct |
-| A2 | Add the live URL to the README and the demo slide | Jay | A1 done | Commit on `main`; slide 12 shows the URL | Claude, after Jay gives the URL; or Jay | 30 Oct |
+| A1 | ~~Deploy the dashboard publicly~~ **Done 24 Oct:** GitHub Pages, https://jayvaghela779.github.io/cs3011-public-transport-demand-occupancy/, all five pages checked in a real browser ([runbook §5](DEMO_RUNBOOK.md#5-public-dashboard-on-github-pages)) | Claude | none | Published files byte-identical to `main`; pages verified | Done | 24 Oct |
+| A2 | ~~Add the live URL to the README and the demo slide~~ **Done 24 Oct** (README, runbook, report, slides 12–13) | Claude | A1 | Commit on `main`; deck updated | Done | 24 Oct |
+| A7 | Open the public URL once on the campus network or the venue Wi-Fi, and note how long the first load takes (our measurement is from one home network) | Disha | Being on campus | Time written in the team issue | Human | 31 Oct |
 | A3 | Send the TA email (draft is in Jay's local `ai_project\team_prep` folder, not in this repository) | Jay | The TA's name from the evaluation schedule spreadsheet | Email sent; the reply saved privately | Human | 26 Oct |
 | A4 | Record the TA's answers: Brazilian dataset acceptable; estimated-load label acceptable; marking rubric; submission requirements; venue and slot; internet and projector; time limit; AI-assistance policy | Jay | A3 answered | "Open questions for the TA" in [PROJECT_PLAN.md](PROJECT_PLAN.md) ticked, with the answers (no private email text) | Human; Claude can update the docs once told the answers | 29 Oct |
 | A5 | If the TA requires a submission (GitHub link, ZIP, report), submit it | Jay | A4 | Confirmation of submission | Human | TA's deadline |
@@ -25,7 +26,7 @@ Each member runs the [runbook §1](DEMO_RUNBOOK.md#1-install-and-check-once-per-
 
 | # | Action | Owner | Prerequisite | Evidence it is done | Who | By |
 | --- | --- | --- | --- | --- | --- | --- |
-| B1 | Run the tests, verify and the dashboard | Jay | Python 3.12, git | Issue comment showing `86 passed` and `Reproduced` | Human | 28 Oct |
+| B1 | Run the tests, verify and the dashboard | Jay | Python 3.12, git | Issue comment showing `93 passed` and `Reproduced` | Human | 28 Oct |
 | B2 | Same | Akshar | Same | Issue comment | Human | 28 Oct |
 | B3 | Same | Tirth | Same | Issue comment | Human | 28 Oct |
 | B4 | Same, on the laptop that will run the demo | Disha | Same | Issue comment | Human | 28 Oct |
@@ -57,24 +58,25 @@ Each member runs the [runbook §1](DEMO_RUNBOOK.md#1-install-and-check-once-per-
 
 | # | Action | Owner | Prerequisite | Evidence it is done | Who | By |
 | --- | --- | --- | --- | --- | --- | --- |
-| E1 | Review the slide deck visually, every slide. Nobody has checked the rendered slides yet | Jay | None | Issue comment or a list of fixes | Human | 29 Oct |
-| E2 | Re-export the PowerPoint and PDF. The copies in the local `ai_project` folder are older than the 24 Oct audit edits to slides 5, 9 (speaker notes), 11 and 14 | Jay | E1 | New files dated after E1 | Human | 31 Oct |
+| E1 | Review the slide deck visually, every slide, in the live deck and in presentation mode. Claude rendered all 14 slides of the PowerPoint export on 24 Oct and found no overflow or overlap, but no person has reviewed them yet | Jay | None | Issue comment or a list of fixes | Human | 29 Oct |
+| E2 | ~~Re-export the PowerPoint and PDF~~ **Done 24 Oct:** `CS3011_Group52_Presentation.pptx` and `.pdf` in Jay's local `ai_project` folder now match the deck (deck version 17: public site on slides 12–13, 93 tests on slide 5, the audit edits to slides 6, 8, 9, 11 and 14). Every slide's text and speaker notes were compared with the deck. If slides change after E1, export again from the deck's Download menu | Claude | none | Text comparison with the deck shows no differences | Done | 24 Oct |
+| E6 | Watch the narrated backup video once from start to end with sound, on the demo laptop. Its narration was checked by machine (levels, timing, an offline speech recogniser), not yet by a person | Disha | E5 | "Video watched, sound OK" in the team issue | Human | 1 Nov |
 | E3 | Code freeze: no changes to `main` except fixes found in rehearsal | Jay | B1–B5 and C1 done | A git tag such as `v1.0-evaluation` on `main` | Claude, after Jay asks; or Jay | 31 Oct |
 | E4 | Full rehearsals with a timer, then 10 minutes of questions from the question bank asked by teammates | All | E1–E3 | Two rehearsals done on 1–2 Nov, with times noted | Human | 2 Nov |
-| E5 | Backup demo ready: the video on the demo laptop and on a USB stick; a second laptop with the app installed and tested | Disha, plus one more member | B4 | The video plays on both; the second laptop shows the app | Human | 2 Nov |
+| E5 | Backup demo ready: the narrated video (`group52_dashboard_demo.mp4`, 3 min 18 s, in Jay's local `ai_project` folder) on the demo laptop and on a USB stick; a second laptop with the app installed and tested | Disha, plus one more member | B4 | The video plays with sound on both; the second laptop shows the app | Human | 2 Nov |
 
 ## F. On 3 November
 
 | # | Action | Owner | Evidence |
 | --- | --- | --- | --- |
 | F1 | Laptop charged; charger and display adapter packed | Disha | Packed |
-| F2 | The local app running and on the Forecast explorer by 5:30 PM; the cloud URL, if deployed, opened by 5:30 PM | Disha, Jay | Both open in the browser |
+| F2 | The local app running and on the Forecast explorer by 5:30 PM; the public URL opened once on the demo laptop by 5:30 PM, if the team will show it | Disha, Jay | Both open in the browser |
 | F3 | The local app still works with Wi-Fi off | Disha | Checked once on the day |
 | F4 | The slides open in presentation mode on the room's display | Jay | Checked before the start |
 
 ## What Claude can still do on request
 
-- Add the deployment URL, a `LICENSE` file or a git tag.
+- Add a `LICENSE` file or a git tag.
 - Update the docs with the TA's answers.
 - Edit slide text.
 - Apply the night-interval fix with disclosure, if the team chooses it.

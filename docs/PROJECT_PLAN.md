@@ -18,7 +18,7 @@ Analyse public-transport data to predict passenger demand and occupancy, to supp
     - Baselines: same hour last week (seasonal naive); historical mean for route, weekday and hour.
     - Main model: LightGBM with lag, rolling, calendar and holiday features.
 3. **Estimated-load model:** day-ahead estimated peak on-board load per route-hour; crowding levels under a documented capacity assumption, with a sensitivity analysis over alternative capacities.
-4. **Streamlit app:** forecast vs actual, crowding strip, model comparison, data caveats. Deployed on Streamlit Community Cloud with a laptop fallback.
+4. **Streamlit app:** forecast vs actual, crowding strip, model comparison, data caveats. Public on GitHub Pages (in-browser, stlite) with the laptop app as the main demo; the original plan said Streamlit Community Cloud, laptop fallback.
 5. **Tests and reproducibility:** pytest; every reported number comes from a committed script.
 
 An "extra trips needed" figure is optional and illustrative only, under the stated capacity assumption. It will be dropped if it cannot be justified.
@@ -44,12 +44,12 @@ An "extra trips needed" figure is optional and illustrative only, under the stat
 | 24 to 25 Oct | Plan, repository, data pipeline and checks | Jay, Akshar |
 | 26 to 27 Oct | Baselines and demand model | Jay, Tirth |
 | 27 to 28 Oct | Estimated-load model, capacity sensitivity | Tirth |
-| 28 to 29 Oct | Streamlit app, cloud deployment | Disha, Jay |
+| 28 to 29 Oct | Streamlit app, public deployment (done 24 Oct on GitHub Pages) | Disha, Jay |
 | 30 Oct | Error analysis, results tables | Tirth, Jay |
 | 31 Oct (end of day) | **Core code freeze** | All |
 | 31 Oct to 1 Nov | Slides, viva question sheet, backup demo video | Shivani, all |
 | 1 to 2 Nov | Rehearsals on frozen code only | All |
-| 3 Nov, 6:00 PM | Evaluation (wake the cloud app by 5:30 PM) | All |
+| 3 Nov, 6:00 PM | Evaluation (local app running and public URL opened by 5:30 PM) | All |
 
 The Victoria train-count dataset is a stretch goal only if the core is finished early.
 
@@ -66,15 +66,16 @@ The Victoria train-count dataset is a stretch goal only if the core is finished 
 - [x] Automated tests (pytest) on GitHub Actions: Ubuntu with Python 3.11 and 3.12, Windows with Python 3.12; `python -m transit.verify` checks a rerun against the committed results
 - [x] Full rerun from a fresh clone (Linux, Python 3.12) reproduced every committed result ([record](ARCHITECTURE.md#reproduction-record))
 - [x] Architecture document, viva preparation sheet, slide deck draft (claude.ai artifact; private until Jay shares it)
-- [x] Backup demo video recorded (68 s, no narration; saved in Jay's local project folder, not in the repository)
+- [x] Backup demo video recorded; replaced on 24 Oct by a narrated version with captions, 3 min 18 s (in Jay's local project folder, not in the repository)
+- [x] Slide exports (PowerPoint and PDF) brought up to date with the deck on 24 Oct
 - [x] Project report drafted (24 Oct): Markdown source, Word and PDF in [`reports/project_report/`](../reports/project_report/), rebuilt with `python reports/project_report/build_report.py`; numbers checked against RESULTS.md
 - [x] Code walkthrough with per-member reading paths and exercises: [PROJECT_CODE_WALKTHROUGH.md](PROJECT_CODE_WALKTHROUGH.md)
 - [ ] **All:** read the report and correct anything you disagree with; each member works through their section of the code walkthrough (exercises first, answers second)
-- [ ] **Jay:** deploy on Streamlit Community Cloud (needs his GitHub sign-in); add the URL to the README
+- [x] Public dashboard on GitHub Pages: https://jayvaghela779.github.io/cs3011-public-transport-demand-occupancy/ (24 Oct; published files byte-identical to `main`; all five pages checked in a real browser; README, runbook and report updated)
 - [ ] **Jay:** share the slide deck with the team; agree the speaking split
 - [ ] **Akshar:** run [`notebooks/reproduce_on_colab.ipynb`](../notebooks/reproduce_on_colab.ipynb) on Colab (or the README steps on his laptop) and post the `transit.verify` output in a GitHub issue
 - [ ] **Tirth:** read RESULTS.md end to end; check the error-analysis claims against the dashboard
-- [ ] **Disha:** rehearse the 3-minute demo; re-record the backup video with narration if the team wants one
+- [ ] **Disha:** rehearse the 3-minute demo; watch the narrated backup video once with sound
 - [ ] **Shivani:** read DECISIONS.md D8–D13 and VIVA_PREP.md; own the limitations slide
 - [ ] **All:** each member runs `pytest` and the app on their own laptop before 1 Nov
 - [ ] **All:** code freeze at the end of 31 Oct; rehearsals 1–2 Nov
@@ -106,7 +107,7 @@ These are unresolved. Work continues meanwhile, and nothing in the presentation 
 | Little slack before 3 Nov | Core freeze 31 Oct; 1 to 2 Nov for rehearsals only |
 | Occupancy label is an estimate | "Estimated on-board load" wording everywhere; caveats page in the app |
 | No vehicle capacity in SUNT | Documented assumption plus sensitivity analysis |
-| Cloud app asleep or over memory | Small committed artifacts; wake early; laptop fallback; demo video |
+| Public site slow on a weak network (first visit about 85 MB) | Local app is the main demo; open the public URL beforehand; narrated backup video |
 | SUNT hosts unavailable | Team keeps a private copy of the 59 raw files (not in this public repo) |
 | Time leakage | Chronological split; tests that features use only data at least 24 h old |
 | Uneven contribution history | Feature branches; each member commits from their own account |

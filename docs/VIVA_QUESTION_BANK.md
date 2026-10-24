@@ -294,7 +294,7 @@ It reads the committed `metrics.json` and prediction files. The Model comparison
 - LightGBM runs with a fixed seed in deterministic mode.
 - On 24 Oct 2026, a full rerun from a fresh clone (Python 3.12) reproduced the route-hour table cell by cell, all 2,326 numbers in `metrics.json`, all 5 prediction files, and byte-identical `RESULTS.md` and `planning.json` (ARCHITECTURE.md, "Reproduction record").
 - `python -m transit.verify` repeats the comparison for anyone.
-- GitHub Actions runs 86 tests and the verify step on Ubuntu (Python 3.11, 3.12) and Windows (Python 3.12, with and without the locked versions).
+- GitHub Actions runs 93 tests and the verify step on Ubuntu (Python 3.11, 3.12) and Windows (Python 3.12, with and without the locked versions).
 
 Limits:
 - The full pipeline has not been rerun on Windows or Colab.
@@ -302,7 +302,7 @@ Limits:
 
 *Follow-up: "Couldn't you have edited metrics.json?"* Anyone can rerun the pipeline in about 11 minutes and verify will list any difference.
 
-**57. What do the 86 tests cover, and what don't they?**
+**57. What do the 93 tests cover, and what don't they?**
 They cover:
 - aggregation and conservation of boardings (`test_aggregate`);
 - input checks and time windows;
@@ -312,15 +312,23 @@ They cover:
 - the leakage test and the baselines;
 - a synthetic end-to-end training run, including the blend formula and the fact that the blend weight is chosen on validation;
 - every dashboard page rendering, with displayed numbers matching the files (`test_app`);
-- the verify tool.
+- the verify tool;
+- the public web build: the page lists every file the app reads, the site copies them byte for byte, and versions are pinned (`test_web`).
 
 They do not re-check real-data model accuracy (that needs the 510 MB download and about 8 minutes), and they do not click through the app in a real browser.
 
 **58. Why Streamlit?**
-It is free and pure Python, runs locally or on Streamlit Community Cloud, and has a test harness (`AppTest`) that we use in CI.
+It is free and pure Python, runs locally, can run inside a browser through stlite (which is how our public site works), and has a test harness (`AppTest`) that we use in CI.
 
-**59. Is the dashboard deployed?**
-Not yet. Deploying needs Jay's GitHub sign-in on Streamlit Community Cloud. Until it is done we demo the local app, with a 68-second recorded video as a backup. Never say it is live unless you have opened the URL that day.
+**59. Is the dashboard deployed? How?**
+**[Measured]** Yes, on GitHub Pages: https://jayvaghela779.github.io/cs3011-public-transport-demand-occupancy/. It is a static page that runs the unchanged app inside the visitor's browser with stlite (Streamlit 1.65 on Pyodide, that is, Python compiled to WebAssembly).
+- A GitHub Actions workflow copies the app code and the committed result files from `main` to the `gh-pages` branch, with a SHA-256 manifest.
+- The page downloads them through jsDelivr's mirror, checks every hash, and re-fetches any mismatching copy from GitHub Pages.
+- On 24 Oct the published files were byte-identical to `main`, and all five pages matched the local app in a real browser.
+
+*Follow-up: "Why not Streamlit Community Cloud?"* It would send less data to viewers, but it needs a separate account sign-in and its free apps sleep after 12 hours idle. GitHub Pages needs neither.
+
+*Follow-up: "What is the catch?"* A first visit downloads about 85 MB: 83 s at 10 Mbit/s, about 5 min 40 s at 2 Mbit/s. A repeat visit takes about 40 s. That is why the local app is our main demo and the narrated video our backup. Say "live" only if you opened the URL that day.
 
 **60. How did you use Git?**
 Feature branches, pull requests, CI on every pull request, merges into `main`, no force-pushes or rewritten history. The history shows the AI co-author on every commit. Teammates' reviews and fixes should be committed from their own accounts.

@@ -3,9 +3,9 @@
 How to install, check and run the dashboard on a team laptop, the 3-minute demo, and what to do when something breaks.
 
 **Status on 24 Oct 2026.**
-- The dashboard runs locally.
-- It is **not deployed** on Streamlit Community Cloud. That needs Jay's GitHub sign-in; see the checklist at the end.
-- Do not tell the examiners it is live unless you have opened the URL yourself that day.
+- The dashboard runs locally (the main plan for the demo).
+- It is also public on GitHub Pages: **https://jayvaghela779.github.io/cs3011-public-transport-demand-occupancy/** (section 5). It runs in the visitor's browser and was checked on all five pages that day.
+- Before you call it live in the evaluation, open it yourself that day.
 
 ## 1. Install and check (once per laptop, with internet)
 
@@ -44,7 +44,7 @@ python -m streamlit run app/streamlit_app.py
 
 | Command | Expected result |
 | --- | --- |
-| `python -m pytest -q` | `86 passed` (the count grows if tests are added; nothing should fail) |
+| `python -m pytest -q` | `93 passed` (the count grows if tests are added; nothing should fail) |
 | `python -m transit.verify` | `data/processed/route_hour.parquet: all 541,611 rows x 12 columns match.` then `Reproduced: all 2326 values match ...` |
 | `python -m streamlit run app/streamlit_app.py` | A browser tab opens at http://localhost:8501 with the title "AI Based Public Transport Demand and Occupancy Prediction" and five pages in the sidebar |
 
@@ -115,30 +115,42 @@ If anything fails on the day, do not debug in front of the examiners. Switch to 
 
 1. **The local app** (the main plan). It needs no internet once installed. Install everything the day before; `pip install` itself needs internet.
 2. **A second laptop** with the app already installed and tested (one teammate besides Disha).
-3. **The recorded video:** `group52_dashboard_demo.mp4` (68 seconds, all five pages, no sound). It is in Jay's local project folder, not in the repository. Copy it to the demo laptop and a USB stick, play it in any video player, and talk over it using the script above.
+3. **The narrated video:** `group52_dashboard_demo.mp4` (3 min 18 s, 1080p, spoken narration with captions burned in: title, data, a walkthrough of the local dashboard, key results, limitations). It is in Jay's local project folder, not in the repository. Copy it to the demo laptop and a USB stick and play it in any video player. The captions keep it usable if the room's sound fails.
 4. **The screenshots on slide 12**, as a last resort.
 
-If Jay deploys the cloud app, open it by 5:30 PM on 3 November to wake it, and keep the local app open beside it.
+The public site (section 5) is an extra, not a fallback for a broken laptop: it needs internet and a long first load. If you want to show it, open it on the demo laptop by 5:30 PM so the browser cache is warm.
 
-## 5. Streamlit Community Cloud deployment checklist (Jay only)
+## 5. Public dashboard on GitHub Pages
 
-This needs Jay's GitHub account, which owns the repository. Claude cannot sign in or deploy for him.
+**URL:** https://jayvaghela779.github.io/cs3011-public-transport-demand-occupancy/
 
-| Step | Detail |
+**What it is.** A static page (`web/index.html`) that runs the same `app/streamlit_app.py` inside the browser with stlite 1.12.0 (Streamlit 1.65 on Pyodide). No server and no account beyond GitHub. It never sleeps. It needs a recent Chrome, Edge, Firefox or Safari with JavaScript.
+
+**What a visitor sees.**
+1. A loading page with a progress line: "Downloading results: x of 27.2 MB", then Python starts with stlite's own messages ("Loading Pyodide", "Installing packages").
+2. Then the same five pages as the local app, with the same numbers.
+
+**How long it takes (measured 24 Oct 2026).**
+
+| Visit | Time |
 | --- | --- |
-| 1 | Go to https://share.streamlit.io and sign in with GitHub as `jayvaghela779`. Approve the access Streamlit asks for. |
-| 2 | Click **Create app**, then **"Yup, I have an app"**. |
-| 3 | Repository `jayvaghela779/cs3011-public-transport-demand-occupancy`, branch `main`, main file path `app/streamlit_app.py`. |
-| 4 | App URL: optional; choose a short subdomain if offered. |
-| 5 | **Advanced settings:** Python **3.12** (the documented default). No secrets are needed. |
-| 6 | Deploy and wait. The first install takes a few minutes, because `requirements.txt` also installs LightGBM, scikit-learn and pytest. |
-| 7 | Open all five pages. Open the recompute check on Model comparison and confirm every row matches. |
-| 8 | Send the URL to the team. Claude can then add it to the README and the demo slide, or Jay can. |
-| 9 | On 3 November, open the URL by 5:30 PM. Apps with no traffic for 12 hours go to sleep, and anyone can wake one from its sleep page. |
+| First visit, connection throttled to 10 Mbit/s | 83 s |
+| First visit, throttled to 2 Mbit/s (a slow home line) | about 5 min 40 s |
+| Repeat visit (browser cache) | about 40 s |
 
-What Community Cloud uses, according to its documentation:
-- It looks for a dependency file next to the entry point (`app/`, none there), then at the repository root. It uses the first of `uv.lock`, `Pipfile`, `environment.yml`, `requirements.txt`, `pyproject.toml`, so it will use our root `requirements.txt`.
-- It reads `.streamlit/config.toml` from the root.
-- Resources are limited (documented in February 2024 as roughly 0.7 to 2.7 GB of memory). The app loads about 25 MB of prediction files, which should fit, but that has not been tried there.
+If the loading messages stop for two minutes, the page shows a yellow notice: reload. Downloaded files are kept, so the next attempt is faster.
 
-Sources: Streamlit docs, [Deploy your app](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy), [App dependencies](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/app-dependencies), [Manage your app](https://docs.streamlit.io/deploy/streamlit-community-cloud/manage-your-app) (checked 24 Oct 2026).
+**How it stays up to date.** `.github/workflows/pages.yml` runs on every push to `main` that changes `web/`, `app/`, `src/transit/`, `reports/metrics.json`, `reports/planning.json` or `data/predictions/`. It runs `python web/build_site.py`, commits the result to the `gh-pages` branch (never force-pushing) and refreshes jsDelivr's copy. GitHub Pages then redeploys within a minute or two. Nothing needs to be done by hand. Do not edit the `gh-pages` branch; edit `web/index.html` on `main`.
+
+**How we know it shows the committed results.** `site-manifest.json` on the site lists every file's SHA-256 from `main`. The page checks each downloaded file against it before using it. `tests/test_web.py` fails if the page's file list misses anything the app reads.
+
+**Troubleshooting.**
+
+| Symptom | What to do |
+| --- | --- |
+| Stuck on "Downloading results" | The network is slow or blocks jsDelivr. Wait, or use the local app. |
+| Yellow "Loading has not moved" notice | Reload the page. |
+| "Loading failed: ..." on the start page | Reload; if it repeats, the network blocks jsDelivr or GitHub. Use the local app. |
+| Blank page | JavaScript is disabled or the browser is too old. Use a current Chrome or Edge. |
+
+**Not used: Streamlit Community Cloud.** It would send far less data to each viewer, but it needs a separate Streamlit account sign-in and its free apps sleep after 12 hours without visitors. If the team ever wants it, point it at `app/streamlit_app.py` on `main`; `requirements.txt` at the root is enough.
