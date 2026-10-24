@@ -80,6 +80,11 @@ def day_chart(df: pd.DataFrame, value_name: str, capacity: float | None = None) 
     fig = go.Figure()
     obs = df[df["status"] == "observed"]
     miss = df[df["status"] != "observed"]
+    if {"lo", "hi"} <= set(df.columns):
+        fig.add_trace(go.Scatter(x=df["ts_hour"], y=df["hi"], mode="lines", line=dict(width=0),
+                                 showlegend=False, hoverinfo="skip"))
+        fig.add_trace(go.Scatter(x=df["ts_hour"], y=df["lo"], mode="lines", line=dict(width=0), fill="tonexty",
+                                 fillcolor="rgba(37,99,235,0.12)", name="80% interval (calibrated)"))
     fig.add_trace(go.Scatter(x=obs["ts_hour"], y=obs["target"], mode="lines+markers", name="Actual (SUNT)",
                              line=dict(color=COLOURS["target"], width=3)))
     for k in ("ensemble", "seasonal_naive"):
@@ -143,6 +148,11 @@ def page_explorer(metrics: dict) -> None:
         def colour(v):
             return f"background-color: {LEVEL_COLOURS.get(v, '#e5e7eb')}; color: white" if v else ""
         st.dataframe(show.style.map(colour), width="stretch")
+    iv = metrics["targets"]["demand"].get("intervals")
+    if iv:
+        st.caption(f"Shaded band: 80% prediction interval from quantile models, widened on the validation week. "
+                   f"Test coverage: {fmt_pct(iv['test_calibrated']['coverage'])} of actual demand values fall inside "
+                   f"(target 80%).")
     if (d1["status"] != "observed").any():
         st.caption("Open circles: hours this route normally runs but SUNT has no record that day. "
                    "They are treated as missing data, not zero demand, and are not scored (decision D8).")

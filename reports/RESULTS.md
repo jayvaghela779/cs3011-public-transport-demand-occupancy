@@ -135,6 +135,23 @@ Chosen on validation: objective `regression_l1`, 63 leaves, 140 rounds.
 | Without burst | 127,409 | 4.67 | 19.24% | 6.19 |
 | With burst | 446 | 9.98 | 14.73% | 10.90 |
 
+## Prediction intervals (80%, test)
+
+Two quantile LightGBM models (10% and 90%), early-stopped on validation and refit on train + validation,
+then widened by a split-conformal margin computed on the validation week (decision D13).
+
+| Target | Raw coverage | Calibrated coverage | Mean width (calibrated) | Conformal margin |
+| --- | --- | --- | --- | --- |
+| demand | 78.93% | 80.39% | 59.6 | 0.00 |
+| load | 79.30% | 79.30% | 15.2 | 0.00 |
+
+Validation raw coverage: demand 79.21%,
+load 80.38%. The raw quantile models were
+already close to 80% on validation, so the conformal margin is nearly zero. For demand, that tiny margin still moves
+about 1.5% of test hours inside the interval: almost all are hours with zero boardings whose raw lower bound sat
+just above zero. Intervals are wide for busy route-hours (mean width about 60 boardings), which is the honest
+uncertainty of an hourly route forecast.
+
 ## Crowding levels and capacity sensitivity (test)
 
 Capacity from ABNT NBR 15570:2009, Table 1 (minimum capacity by vehicle class) and Table 2 (6 standing passengers per m2). Levels: low < 50%,

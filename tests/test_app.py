@@ -61,3 +61,15 @@ def test_forecast_file_is_the_same_blend_as_evaluated():
     assert len(f) == m["forecast_rows"] > 0
     assert (f["demand_forecast"] >= 0).all() and (f["load_forecast"] >= 0).all()
     assert m["targets"]["demand"]["blend"]["weight_on_lightgbm"] in (0.0, 0.25, 0.5, 0.75, 1.0)
+
+
+@pytest.mark.parametrize("short", ["demand", "load"])
+def test_interval_coverage_matches_prediction_files(short):
+    m = json.loads(METRICS.read_text(encoding="utf-8"))["targets"][short]
+    if "intervals" not in m:
+        pytest.skip("intervals not in this metrics.json")
+    df = pd.read_parquet(config.DATA_DIR / "predictions" / f"{short}_test.parquet")
+    assert (df["lo"] <= df["hi"]).all() and (df["lo"] >= 0).all()
+    s = df[df["target"].notna()]
+    inside = ((s["target"] >= s["lo"]) & (s["target"] <= s["hi"])).mean()
+    assert inside == pytest.approx(m["intervals"]["test_calibrated"]["coverage"], rel=1e-12)

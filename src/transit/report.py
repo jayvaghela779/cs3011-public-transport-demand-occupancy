@@ -333,6 +333,22 @@ Chosen on validation: {cfg(lod)}.
 | Without burst | {burst['ensemble']['False']['n']:,} | {burst['ensemble']['False']['mae']:.2f} | {pct(burst['ensemble']['False']['wape'])} | {burst['seasonal_naive']['False']['mae']:.2f} |
 | With burst | {burst['ensemble'].get('True', {}).get('n', 0):,} | {burst['ensemble'].get('True', {}).get('mae', float('nan')):.2f} | {pct(burst['ensemble'].get('True', {}).get('wape', float('nan')))} | {burst['seasonal_naive'].get('True', {}).get('mae', float('nan')):.2f} |
 
+## Prediction intervals (80%, test)
+
+Two quantile LightGBM models (10% and 90%), early-stopped on validation and refit on train + validation,
+then widened by a split-conformal margin computed on the validation week (decision D13).
+
+| Target | Raw coverage | Calibrated coverage | Mean width (calibrated) | Conformal margin |
+| --- | --- | --- | --- | --- |
+{chr(10).join(f"| {s} | {pct(m['targets'][s]['intervals']['test_raw']['coverage'])} | {pct(m['targets'][s]['intervals']['test_calibrated']['coverage'])} | {m['targets'][s]['intervals']['test_calibrated']['mean_width']:.1f} | {m['targets'][s]['intervals']['conformal_margin']:.2f} |" for s in ('demand', 'load') if 'intervals' in m['targets'][s])}
+
+Validation raw coverage: demand {pct(dem.get('intervals', {}).get('valid_raw', {}).get('coverage', float('nan')))},
+load {pct(lod.get('intervals', {}).get('valid_raw', {}).get('coverage', float('nan')))}. The raw quantile models were
+already close to 80% on validation, so the conformal margin is nearly zero. For demand, that tiny margin still moves
+about 1.5% of test hours inside the interval: almost all are hours with zero boardings whose raw lower bound sat
+just above zero. Intervals are wide for busy route-hours (mean width about 60 boardings), which is the honest
+uncertainty of an hourly route forecast.
+
 ## Crowding levels and capacity sensitivity (test)
 
 Capacity from {m['crowding']['source']}. Levels: low < {m['crowding']['thresholds_load_factor'][0]:.0%},

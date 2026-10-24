@@ -39,6 +39,10 @@ BASELINES = ["seasonal_naive", "dow4_mean", "hist_average"]
 # Final forecast (decision D12): w * LightGBM + (1 - w) * historical average,
 # with w chosen on the validation week from this grid.
 BLEND_WEIGHTS = [0.0, 0.25, 0.5, 0.75, 1.0]
+# 80% prediction interval from two quantile models, then split-conformal
+# widening calibrated on the validation week (CQR, decision D13).
+QUANTILES = (0.1, 0.9)
+NOMINAL = 0.8
 FORECAST_DATE = config.END_DATE + timedelta(days=1)
 REPORTS = config.ROOT / "reports"
 PRED_DIR = config.DATA_DIR / "predictions"
@@ -139,8 +143,39 @@ def run_target(X: pd.DataFrame, target: str, log) -> tuple[dict, pd.DataFrame, p
     log(f"  blend weight on LightGBM chosen on validation: {w_best} ({blend})")
     for key in full:
         full[key]["ensemble"] = w_best * full[key]["model"] + (1 - w_best) * full[key]["hist_average"]
+    # 80% intervals: quantile LightGBM, early-stopped on validation, refit on
+    # train + validation, widened by a conformal margin from validation.
+    qmodels = {}
+    for q in QUANTILES:
+        cq = {"objective": "quantile", "alpha": q, "metric": "quantile", "num_leaves": 63}
+        mq = lgbm.fit_with_early_stopping(tr, va, feats, cq)
+        qmodels[q] = (mq, lgbm.fit_fixed_rounds(trva, feats, cq, int(mq.best_iteration)))
+    for key in full:
+        f = full[key]
+        idx = 0 if key == "valid" else 1
+        lo = lgbm.predict(qmodels[QUANTILES[0]][idx], f, feats)
+        hi = lgbm.predict(qmodels[QUANTILES[1]][idx], f, feats)
+        f["lo_raw"], f["hi_raw"] = np.minimum(lo, hi), np.maximum(lo, hi)
+    vs = full["valid"][full["valid"]["target"].notna()]
+    score = np.maximum(vs["lo_raw"] - vs["target"], vs["target"] - vs["hi_raw"]).to_numpy()
+    n = len(score)
+    margin = float(np.quantile(score, min(1.0, np.ceil((n + 1) * NOMINAL) / n)))
+    for key in full:
+        full[key]["lo"] = np.clip(full[key]["lo_raw"] - margin, 0, None)
+        full[key]["hi"] = full[key]["hi_raw"] + margin
+
+    def coverage(d, lo, hi):
+        inside = (d["target"] >= d[lo]) & (d["target"] <= d[hi])
+        return {"coverage": float(inside.mean()), "mean_width": float((d[hi] - d[lo]).mean()), "n": int(len(d))}
+
     va = full["valid"][full["valid"]["target"].notna()].copy()
     te = full["test"][full["test"]["target"].notna()].copy()
+    intervals = {"nominal": NOMINAL, "quantiles": list(QUANTILES), "conformal_margin": margin,
+                 "valid_raw": coverage(va, "lo_raw", "hi_raw"), "test_raw": coverage(te, "lo_raw", "hi_raw"),
+                 "test_calibrated": coverage(te, "lo", "hi"),
+                 "rounds": {str(q): int(qmodels[q][0].best_iteration) for q in QUANTILES}}
+    log(f"  80% interval: test coverage raw {intervals['test_raw']['coverage']:.3f}, "
+        f"calibrated {intervals['test_calibrated']['coverage']:.3f} (margin {margin:.2f})")
     preds = ["ensemble", "model"] + BASELINES
 
     res = {
@@ -148,6 +183,7 @@ def run_target(X: pd.DataFrame, target: str, log) -> tuple[dict, pd.DataFrame, p
         "features": feats,
         "chosen_config": {**cfg, "rounds": rounds},
         "blend": {"weight_on_lightgbm": w_best, "valid_wape_by_weight": {str(k): v for k, v in blend.items()}},
+        "intervals": intervals,
         "tuning": tuning,
         "ablation_valid": ablation,
         "rows": {"train": len(tr), "valid": len(va), "test": len(te)},
@@ -199,6 +235,10 @@ def run_target(X: pd.DataFrame, target: str, log) -> tuple[dict, pd.DataFrame, p
     fc["lightgbm"] = lgbm.predict(final, fc, feats)
     fc["hist_average"] = baselines.predict(fc, "hist_average", baselines.hour_medians(trva))[0]
     fc["model"] = w_best * fc["lightgbm"] + (1 - w_best) * fc["hist_average"]
+    lo = lgbm.predict(qmodels[QUANTILES[0]][1], fc, feats)
+    hi = lgbm.predict(qmodels[QUANTILES[1]][1], fc, feats)
+    fc["lo"] = np.clip(np.minimum(lo, hi) - margin, 0, None)
+    fc["hi"] = np.maximum(lo, hi) + margin
     return res, full["valid"], full["test"], fc
 
 
@@ -214,7 +254,7 @@ def main() -> None:
     REPORTS.mkdir(exist_ok=True)
     PRED_DIR.mkdir(parents=True, exist_ok=True)
     keep = ["route", "direction", "service_date", "service_hour", "ts_hour", "daytype", "status", "regular",
-            "n_burst_events", "target", "ensemble", "model"] + BASELINES
+            "n_burst_events", "target", "ensemble", "model", "lo", "hi"] + BASELINES
     results = {
         "generated_by": "python -m transit.models.run",
         "package_version": __version__,
@@ -234,8 +274,8 @@ def main() -> None:
         results["targets"][short] = res
         va[keep].to_parquet(PRED_DIR / f"{short}_valid.parquet", index=False, compression="zstd")
         te[keep].to_parquet(PRED_DIR / f"{short}_test.parquet", index=False, compression="zstd")
-        forecasts.append(fc[["route", "direction", "service_date", "service_hour", "ts_hour", "model"]]
-                         .rename(columns={"model": f"{short}_forecast"}))
+        forecasts.append(fc[["route", "direction", "service_date", "service_hour", "ts_hour", "model", "lo", "hi"]]
+                         .rename(columns={"model": f"{short}_forecast", "lo": f"{short}_lo", "hi": f"{short}_hi"}))
         pd.DataFrame(res["tuning"]).to_csv(REPORTS / f"tuning_{short}.csv", index=False)
     f = forecasts[0].merge(forecasts[1], on=["route", "direction", "service_date", "service_hour", "ts_hour"])
     f.to_parquet(PRED_DIR / f"forecast_{FORECAST_DATE}.parquet", index=False, compression="zstd")

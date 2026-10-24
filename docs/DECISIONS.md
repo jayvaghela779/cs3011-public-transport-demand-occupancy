@@ -2,6 +2,13 @@
 
 Newest first. Each entry records what was decided, why, and what it rules out.
 
+## D13. 80% prediction intervals with conformal calibration (24 Oct 2026)
+
+- **Decision:** each forecast gets an 80% interval. Two quantile LightGBM models (α = 0.1 and 0.9) are early-stopped on validation and refit on train + validation. The interval is then widened by a split-conformal margin: the validation-week quantile of max(lo − y, y − hi), with the finite-sample correction (conformalised quantile regression).
+- **Why:** planners need a range, not just a point. Raw quantile models are often miscalibrated on new weeks, so the margin is set on validation only.
+- **Caveat:** validation is used both for early stopping of the quantile models and for the margin, so calibration is not perfectly independent. Test coverage is reported as the honest check.
+- **Point forecasts unchanged:** adding intervals does not change any point forecast or point metric; the rerun reproduces them exactly.
+
 ## D12. Final forecast is a validation-chosen blend; the test weeks were scored twice (24 Oct 2026)
 
 - **What happened:** the first full run (v1) scored LightGBM alone on the test weeks. It beat "same hour last week" clearly (demand WAPE 18.39% vs 23.67%) but tied the historical-average baseline (18.35%). The validation week had shown the same pattern: LightGBM 18.84% vs historical average 18.99%. v1 is kept in `reports/archive/metrics_v1_lightgbm_only.json`.

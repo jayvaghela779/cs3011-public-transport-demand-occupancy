@@ -52,7 +52,7 @@ def _dataset(X: pd.DataFrame, features: list[str], reference=None) -> lgb.Datase
 
 def fit_with_early_stopping(train: pd.DataFrame, valid: pd.DataFrame, features: list[str],
                             config: dict) -> lgb.Booster:
-    params = {**BASE_PARAMS, **config, "metric": "l1"}
+    params = {**BASE_PARAMS, "metric": "l1", **config}
     dtr = _dataset(train, features)
     dva = _dataset(valid, features, reference=dtr)
     return lgb.train(params, dtr, num_boost_round=MAX_ROUNDS, valid_sets=[dva],
@@ -60,7 +60,7 @@ def fit_with_early_stopping(train: pd.DataFrame, valid: pd.DataFrame, features: 
 
 
 def fit_fixed_rounds(train: pd.DataFrame, features: list[str], config: dict, rounds: int) -> lgb.Booster:
-    params = {**BASE_PARAMS, **config, "metric": "l1"}
+    params = {**BASE_PARAMS, "metric": "l1", **config}
     return lgb.train(params, _dataset(train, features), num_boost_round=rounds)
 
 

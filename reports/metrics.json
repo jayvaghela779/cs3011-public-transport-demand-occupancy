@@ -78,12 +78,39 @@
           "1.0": 0.18841749447709136
         }
       },
+      "intervals": {
+        "nominal": 0.8,
+        "quantiles": [
+          0.1,
+          0.9
+        ],
+        "conformal_margin": 0.00026418138932441206,
+        "valid_raw": {
+          "coverage": 0.7921366670297014,
+          "mean_width": 61.945447151395975,
+          "n": 64273
+        },
+        "test_raw": {
+          "coverage": 0.7893461523429867,
+          "mean_width": 59.6448747986206,
+          "n": 127935
+        },
+        "test_calibrated": {
+          "coverage": 0.80392386758901,
+          "mean_width": 59.645395535946804,
+          "n": 127935
+        },
+        "rounds": {
+          "0.1": 192,
+          "0.9": 817
+        }
+      },
       "tuning": [
         {
           "objective": "regression",
           "num_leaves": 63,
           "best_iteration": 110,
-          "seconds": 5.5,
+          "seconds": 6.1,
           "n": 64273,
           "mae": 18.720846301313685,
           "rmse": 30.823536128182152,
@@ -94,7 +121,7 @@
           "objective": "regression_l1",
           "num_leaves": 63,
           "best_iteration": 130,
-          "seconds": 8.1,
+          "seconds": 7.9,
           "n": 64273,
           "mae": 18.58370545070853,
           "rmse": 31.483579755770993,
@@ -105,7 +132,7 @@
           "objective": "poisson",
           "num_leaves": 63,
           "best_iteration": 188,
-          "seconds": 10.5,
+          "seconds": 10.0,
           "n": 64273,
           "mae": 18.72702146278621,
           "rmse": 30.912117701387785,
@@ -117,7 +144,7 @@
           "tweedie_variance_power": 1.3,
           "num_leaves": 63,
           "best_iteration": 89,
-          "seconds": 7.0,
+          "seconds": 7.1,
           "n": 64273,
           "mae": 18.64815863166333,
           "rmse": 30.788065708067894,
@@ -128,7 +155,7 @@
           "objective": "poisson",
           "num_leaves": 255,
           "best_iteration": 178,
-          "seconds": 15.4,
+          "seconds": 14.2,
           "n": 64273,
           "mae": 18.804947692859084,
           "rmse": 31.02174687525756,
@@ -139,7 +166,7 @@
           "objective": "regression",
           "num_leaves": 255,
           "best_iteration": 93,
-          "seconds": 8.5,
+          "seconds": 8.0,
           "n": 64273,
           "mae": 18.789423394904556,
           "rmse": 30.93616240659459,
@@ -894,12 +921,39 @@
           "1.0": 0.19538454197478075
         }
       },
+      "intervals": {
+        "nominal": 0.8,
+        "quantiles": [
+          0.1,
+          0.9
+        ],
+        "conformal_margin": 0.0,
+        "valid_raw": {
+          "coverage": 0.8037640685564844,
+          "mean_width": 15.763569307395377,
+          "n": 64239
+        },
+        "test_raw": {
+          "coverage": 0.7929842399593289,
+          "mean_width": 15.205966704969104,
+          "n": 127855
+        },
+        "test_calibrated": {
+          "coverage": 0.7929842399593289,
+          "mean_width": 15.205966704969104,
+          "n": 127855
+        },
+        "rounds": {
+          "0.1": 158,
+          "0.9": 254
+        }
+      },
       "tuning": [
         {
           "objective": "regression",
           "num_leaves": 63,
           "best_iteration": 98,
-          "seconds": 6.1,
+          "seconds": 5.7,
           "n": 64239,
           "mae": 4.82285403747991,
           "rmse": 6.964275521398895,
@@ -910,7 +964,7 @@
           "objective": "regression_l1",
           "num_leaves": 63,
           "best_iteration": 140,
-          "seconds": 9.0,
+          "seconds": 8.7,
           "n": 64239,
           "mae": 4.783112917339814,
           "rmse": 6.976183387699864,
@@ -922,7 +976,7 @@
           "alpha": 15.0,
           "num_leaves": 63,
           "best_iteration": 131,
-          "seconds": 7.1,
+          "seconds": 6.9,
           "n": 64239,
           "mae": 4.807331618152257,
           "rmse": 6.966392111276345,
@@ -933,7 +987,7 @@
           "objective": "poisson",
           "num_leaves": 63,
           "best_iteration": 186,
-          "seconds": 10.9,
+          "seconds": 9.6,
           "n": 64239,
           "mae": 4.823164112275636,
           "rmse": 6.959260922671672,
@@ -955,7 +1009,7 @@
           "objective": "regression",
           "num_leaves": 255,
           "best_iteration": 87,
-          "seconds": 9.3,
+          "seconds": 8.3,
           "n": 64239,
           "mae": 4.841491213769861,
           "rmse": 6.992122344147334,
@@ -3805,5 +3859,5 @@
       "note": "First and only earlier test scoring. It showed LightGBM tying the historical average; the blend was then chosen on validation only."
     }
   ],
-  "runtime_seconds": 360.8
+  "runtime_seconds": 450.0
 }
