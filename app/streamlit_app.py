@@ -282,7 +282,8 @@ def page_forecast(metrics: dict) -> None:
         plan = json.loads(plan_file.read_text(encoding="utf-8"))["precision_at_k"]["50"]
         st.caption(f"Use: these are the hours to check first for extra trips or larger vehicles. On the test weeks, "
                    f"{fmt_pct(plan['ensemble'])} of the daily top-50 flagged route-hours really were high crowding "
-                   f"(last-week rule: {fmt_pct(plan['seasonal_naive'])}; capacity 70).")
+                   f"(historical average: {fmt_pct(plan['hist_average'])}; last-week rule: "
+                   f"{fmt_pct(plan['seasonal_naive'])}; capacity 70).")
     options = (f.groupby(["route", "direction"])["demand_forecast"].sum().sort_values(ascending=False))
     choice = st.selectbox("Route · direction", [f"{r} · {d}" for r, d in options.index])
     r, d = [x.strip() for x in choice.split("·")]

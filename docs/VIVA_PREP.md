@@ -1,6 +1,6 @@
 # Viva preparation
 
-Short answers every member should be able to give, with the evidence to point at. Numbers come from [reports/RESULTS.md](../reports/RESULTS.md); check them there before quoting.
+Short answers every member should be able to give, with the evidence to point at. Numbers come from [reports/RESULTS.md](../reports/RESULTS.md); check them there before quoting. Harder follow-ups are in [VIVA_QUESTION_BANK.md](VIVA_QUESTION_BANK.md); each speaker's part is in [TEAM_PRESENTATION_GUIDE.md](TEAM_PRESENTATION_GUIDE.md).
 
 ## 1. Framing
 
@@ -43,7 +43,7 @@ Short answers every member should be able to give, with the evidence to point at
 **Why LightGBM?**
 - Gradient-boosted trees handle mixed features, missing values (NaN) and non-linear effects.
 - They train in seconds on 350,000 rows on a laptop.
-- Published bus-occupancy studies found tree ensembles strong for this task.
+- The Aarhus passenger-forecasting thesis we studied also compared tree ensembles (Random Forest, XGBoost) with seasonal-naive and neural models. Its results are on its own data, not evidence for ours.
 
 **Why is the final forecast a blend?** LightGBM alone tied the historical average on validation and on test (D12). Averaging two forecasts with different errors usually reduces error. The 50/50 weight was chosen on validation.
 
@@ -51,7 +51,7 @@ Short answers every member should be able to give, with the evidence to point at
 
 - **Demand test WAPE:** final 18.15%; historical average 18.35%; same hour last week 23.67%.
 - **Estimated-load test WAPE:** final 19.20%; historical average 19.35%; same hour last week 25.39%.
-- **Is 0.2 points meaningful?** A paired bootstrap over route-directions gives a 95% interval of −0.29 to −0.06 points. It is small but consistently negative. The large gain is over the last-week rule (about 23%).
+- **Is 0.2 points meaningful?** A paired bootstrap over route-directions gives a 95% interval of −0.29 to −0.06 points, and the blend is better on 13 of 14 test days. It is small, it is only in absolute error (on RMSE the historical average is slightly better for demand), and the bootstrap does not cover other weeks or seasons. The large gain is over the last-week rule (about 23%).
 - **Crowding, 70-passenger bus:** macro-F1 0.769. High-crowding alerts have precision 0.79 and recall 0.61.
 
 **Where does it fail?**

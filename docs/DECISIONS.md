@@ -63,7 +63,7 @@ Newest first. Each entry records what was decided, why, and what it rules out.
 ## D4. Capacity assumption for crowding levels (24 Oct 2026)
 
 - **Decision:** SUNT has no vehicle capacity. Crowding levels will use a capacity value documented with its source, and results will be reported under at least three alternative values.
-- **Status:** the value and its source are not chosen yet (occupancy module).
+- **Status:** superseded by D10, which sets the capacities (ABNT NBR 15570) and the four scenarios.
 
 ## D3. Chronological split and holidays (24 Oct 2026)
 

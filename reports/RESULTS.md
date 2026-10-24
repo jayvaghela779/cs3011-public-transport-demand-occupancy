@@ -42,6 +42,9 @@ last week 25.68%. Blend weights tried on validation:
 | load | Same hour last week | -6.19 | -6.41 to -5.98 | 100.00% |
 | load | LightGBM alone | -0.19 | -0.22 to -0.17 | 100.00% |
 
+Day by day, the final forecast has a lower WAPE than the historical average on 13 of 14 test days for demand
+and 12 of 14 for estimated load.
+
 ![Test WAPE](figures/test_wape.png)
 
 **Ablation (validation week).**
@@ -230,3 +233,9 @@ median test day had 580 high route-hours.
 - The test weeks were scored twice (see the disclosure above); the blend weight was chosen on validation only.
 - LightGBM on its own does not beat a well-chosen historical average; most predictable structure here is a
   stable weekly profile per route and hour.
+- The model was tuned on absolute error, and the gain over the historical average is in MAE and WAPE. On RMSE,
+  which weights large errors more, the final forecast is higher than the historical average for demand (29.72 vs 29.58); lower than the historical average for load (6.90 vs 6.96).
+- The bootstrap resamples route-directions within the same 14 test days, so its interval does not cover
+  week-to-week or seasonal variation.
+- In the daily alert list the final forecast and the historical average differ by at most
+  2.0 percentage points of precision at K = 25, 50 or 100; the clear gain there is over the last-week rule.
