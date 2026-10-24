@@ -133,3 +133,11 @@ def test_theme_matches_between_local_app_and_public_build():
     design = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(design)
     assert local["theme.primaryColor"] == design.LINE and local["theme.textColor"] == design.INK
+
+
+def test_overpass_never_supplies_the_middle_dot():
+    """Overpass's U+00B7 has zero advance width in browsers; every Overpass face must leave it out."""
+    for text in (INDEX.read_text(encoding="utf-8"), (config.ROOT / "app" / "design.py").read_text(encoding="utf-8")):
+        faces = re.findall(r"@font-face\s*\{[^}]*Overpass[^}]*\}", text) or [text[text.index('_font_face("Overpass"'):][:400]]
+        for face in faces:
+            assert "U+00B8-00FF" in face.replace('"', "") and "U+0000-00FF" not in face, face[:120]
