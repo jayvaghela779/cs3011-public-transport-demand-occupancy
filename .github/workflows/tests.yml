@@ -16,11 +16,18 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.11", "3.12"]
+        requirements: [requirements.txt]
         include:
           # The demo laptop runs Windows, so the tests and the verify
-          # command also run on a Windows runner.
+          # command also run on a Windows runner, with the latest allowed
+          # packages and with the exact versions that reproduced the results.
           - os: windows-latest
             python-version: "3.12"
+            requirements: requirements.txt
+          - os: windows-latest
+            python-version: "3.12"
+            requirements: requirements-lock.txt
+    name: pytest (${{ matrix.os }}, ${{ matrix.python-version }}, ${{ matrix.requirements }})
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -29,7 +36,7 @@ jobs:
           cache: pip
       - name: Install
         run: |
-          pip install -r requirements.txt
+          pip install -r ${{ matrix.requirements }}
           pip install -e .
       - name: Run tests
         run: pytest -q
