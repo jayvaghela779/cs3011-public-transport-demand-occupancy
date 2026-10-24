@@ -202,7 +202,7 @@ Deeper answers for all sections: [VIVA_QUESTION_BANK.md](VIVA_QUESTION_BANK.md).
 - **Next-day forecast.** "This is a genuine forecast for 29 April, the day after our data ends. It lists the hours most likely to be crowded. It has no actuals, so it is a demonstration, not an evaluated result."
 - **Missing records** (if one appears): "An open circle is an hour the route normally runs but has no record that day. We treat it as missing data, never as zero."
 
-**Deployment.** "It is not deployed publicly yet. Deploying needs Jay's GitHub sign-in on Streamlit Community Cloud." Only if Jay has deployed it and you opened it that day, say instead: "It is also live at this address."
+**Deployment.** "The same dashboard is public on GitHub Pages at jayvaghela779.github.io/cs3011-public-transport-demand-occupancy. It runs Python inside your browser, so the first visit is a large download; that is why we demo it locally." Say it is live only if you opened it yourself that day (https://jayvaghela779.github.io/cs3011-public-transport-demand-occupancy/).
 
 ### Three ideas you must understand
 
@@ -215,7 +215,8 @@ Deeper answers for all sections: [VIVA_QUESTION_BANK.md](VIVA_QUESTION_BANK.md).
 | Question | Short answer |
 | --- | --- |
 | Is the model running live? | No. The app shows the saved, evaluated predictions; retraining takes about 8 minutes and is done by a separate command (Q6). |
-| What if the internet fails? | The local app needs no internet. If the laptop fails, play the 68-second video. |
+| What if the internet fails? | The local app needs no internet. If the laptop fails, play the narrated backup video (about 3 minutes). |
+| How does the public site work without a server? | stlite runs Streamlit on Pyodide (Python compiled to WebAssembly) in the browser. The page downloads the app and the committed results, checks every file's SHA-256 against a manifest built from `main`, then runs the same app file (Q59). |
 | Why is the next-day forecast not scored? | 29 April is outside our study window. We excluded 29–30 April because those files cover noticeably fewer routes than other days, so they would not be a fair test. |
 | Can I pick any route? | Yes: every in-scope route-direction, busiest first, for the validation or test days. |
 | How do you know the numbers match the report? | The check on the Model comparison page, plus automated tests (Q55). |
@@ -247,7 +248,7 @@ Deeper answers for all sections: [VIVA_QUESTION_BANK.md](VIVA_QUESTION_BANK.md).
   - a small gain over the historical average;
   - test weeks scored twice;
   - a forecast that assumes we know which hours a route runs;
-  - no public deployment yet."
+  - a public site that is slow on a first visit (about 85 MB to download)."
 - "One limitation we found ourselves: the load intervals cover only about 52% of night hours, and the validation week shows the same. We report it rather than tune it on the test weeks."
 - "Next steps: calibrate intervals per time of day, add holiday features, get a timetable for the same months, and test on a city with counted loads."
 
