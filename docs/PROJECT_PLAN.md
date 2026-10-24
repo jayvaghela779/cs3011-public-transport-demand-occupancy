@@ -66,7 +66,8 @@ The Victoria train-count dataset is a stretch goal only if the core is finished 
 - [x] Automated tests (pytest) on GitHub Actions: Ubuntu with Python 3.11 and 3.12, Windows with Python 3.12; `python -m transit.verify` checks a rerun against the committed results
 - [x] Full rerun from a fresh clone (Linux, Python 3.12) reproduced every committed result ([record](ARCHITECTURE.md#reproduction-record))
 - [x] Architecture document, viva preparation sheet, slide deck draft (claude.ai artifact; private until Jay shares it)
-- [x] Backup demo video recorded; replaced on 24 Oct by a narrated version of about 3 minutes (in Jay's local project folder, not in the repository)
+- [x] Backup demo video recorded; replaced on 24 Oct by a narrated version with captions, 3 min 18 s (in Jay's local project folder, not in the repository)
+- [x] Slide exports (PowerPoint and PDF) brought up to date with the deck on 24 Oct
 - [x] Project report drafted (24 Oct): Markdown source, Word and PDF in [`reports/project_report/`](../reports/project_report/), rebuilt with `python reports/project_report/build_report.py`; numbers checked against RESULTS.md
 - [x] Code walkthrough with per-member reading paths and exercises: [PROJECT_CODE_WALKTHROUGH.md](PROJECT_CODE_WALKTHROUGH.md)
 - [ ] **All:** read the report and correct anything you disagree with; each member works through their section of the code walkthrough (exercises first, answers second)
@@ -74,7 +75,7 @@ The Victoria train-count dataset is a stretch goal only if the core is finished 
 - [ ] **Jay:** share the slide deck with the team; agree the speaking split
 - [ ] **Akshar:** run [`notebooks/reproduce_on_colab.ipynb`](../notebooks/reproduce_on_colab.ipynb) on Colab (or the README steps on his laptop) and post the `transit.verify` output in a GitHub issue
 - [ ] **Tirth:** read RESULTS.md end to end; check the error-analysis claims against the dashboard
-- [ ] **Disha:** rehearse the 3-minute demo; re-record the backup video with narration if the team wants one
+- [ ] **Disha:** rehearse the 3-minute demo; watch the narrated backup video once with sound
 - [ ] **Shivani:** read DECISIONS.md D8–D13 and VIVA_PREP.md; own the limitations slide
 - [ ] **All:** each member runs `pytest` and the app on their own laptop before 1 Nov
 - [ ] **All:** code freeze at the end of 31 Oct; rehearsals 1–2 Nov

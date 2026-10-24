@@ -58,11 +58,12 @@ Each member runs the [runbook §1](DEMO_RUNBOOK.md#1-install-and-check-once-per-
 
 | # | Action | Owner | Prerequisite | Evidence it is done | Who | By |
 | --- | --- | --- | --- | --- | --- | --- |
-| E1 | Review the slide deck visually, every slide. Nobody has checked the rendered slides yet | Jay | None | Issue comment or a list of fixes | Human | 29 Oct |
-| E2 | Re-export the PowerPoint and PDF. The copies in the local `ai_project` folder are older than the 24 Oct audit edits to slides 5, 9 (speaker notes), 11 and 14 | Jay | E1 | New files dated after E1 | Human | 31 Oct |
+| E1 | Review the slide deck visually, every slide, in the live deck and in presentation mode. Claude rendered all 14 slides of the PowerPoint export on 24 Oct and found no overflow or overlap, but no person has reviewed them yet | Jay | None | Issue comment or a list of fixes | Human | 29 Oct |
+| E2 | ~~Re-export the PowerPoint and PDF~~ **Done 24 Oct:** `CS3011_Group52_Presentation.pptx` and `.pdf` in Jay's local `ai_project` folder now match the deck (deck version 17: public site on slides 12–13, 93 tests on slide 5, the audit edits to slides 6, 8, 9, 11 and 14). Every slide's text and speaker notes were compared with the deck. If slides change after E1, export again from the deck's Download menu | Claude | none | Text comparison with the deck shows no differences | Done | 24 Oct |
+| E6 | Watch the narrated backup video once from start to end with sound, on the demo laptop. Its narration was checked by machine (levels, timing, an offline speech recogniser), not yet by a person | Disha | E5 | "Video watched, sound OK" in the team issue | Human | 1 Nov |
 | E3 | Code freeze: no changes to `main` except fixes found in rehearsal | Jay | B1–B5 and C1 done | A git tag such as `v1.0-evaluation` on `main` | Claude, after Jay asks; or Jay | 31 Oct |
 | E4 | Full rehearsals with a timer, then 10 minutes of questions from the question bank asked by teammates | All | E1–E3 | Two rehearsals done on 1–2 Nov, with times noted | Human | 2 Nov |
-| E5 | Backup demo ready: the video on the demo laptop and on a USB stick; a second laptop with the app installed and tested | Disha, plus one more member | B4 | The video plays on both; the second laptop shows the app | Human | 2 Nov |
+| E5 | Backup demo ready: the narrated video (`group52_dashboard_demo.mp4`, 3 min 18 s, in Jay's local `ai_project` folder) on the demo laptop and on a USB stick; a second laptop with the app installed and tested | Disha, plus one more member | B4 | The video plays with sound on both; the second laptop shows the app | Human | 2 Nov |
 
 ## F. On 3 November
 

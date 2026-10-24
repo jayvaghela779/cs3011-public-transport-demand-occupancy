@@ -115,7 +115,7 @@ If anything fails on the day, do not debug in front of the examiners. Switch to 
 
 1. **The local app** (the main plan). It needs no internet once installed. Install everything the day before; `pip install` itself needs internet.
 2. **A second laptop** with the app already installed and tested (one teammate besides Disha).
-3. **The narrated video:** `group52_dashboard_demo.mp4` (about 3 minutes, with narration: dashboard walkthrough, key results and limitations). It is in Jay's local project folder, not in the repository. Copy it to the demo laptop and a USB stick and play it in any video player.
+3. **The narrated video:** `group52_dashboard_demo.mp4` (3 min 18 s, 1080p, spoken narration with captions burned in: title, data, a walkthrough of the local dashboard, key results, limitations). It is in Jay's local project folder, not in the repository. Copy it to the demo laptop and a USB stick and play it in any video player. The captions keep it usable if the room's sound fails.
 4. **The screenshots on slide 12**, as a last resort.
 
 The public site (section 5) is an extra, not a fallback for a broken laptop: it needs internet and a long first load. If you want to show it, open it on the demo laptop by 5:30 PM so the browser cache is warm.
