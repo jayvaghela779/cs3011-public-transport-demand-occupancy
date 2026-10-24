@@ -4,7 +4,14 @@ numpy>=1.26
 pyarrow>=14
 requests>=2.31
 
+# Models and evaluation
+lightgbm>=4.3
+scikit-learn>=1.4
+matplotlib>=3.8
+
+# Dashboard
+streamlit>=1.50
+plotly>=5.20
+
 # Tests
 pytest>=8
-
-# Added when their modules are built: lightgbm, scikit-learn, streamlit, plotly

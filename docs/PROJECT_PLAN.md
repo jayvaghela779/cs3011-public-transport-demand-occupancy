@@ -29,7 +29,7 @@ An "extra trips needed" figure is optional and illustrative only, under the stat
 | --- | --- | --- |
 | Train | 1 Mar to 7 Apr | Model fitting |
 | Validation | 8 Apr to 14 Apr | Tuning |
-| Test | 15 Apr to 28 Apr | Used once, after tuning |
+| Test | 15 Apr to 28 Apr | Final scoring (scored twice in total; disclosed, decision D12) |
 
 - 29 and 30 April 2024 are excluded: those files cover noticeably fewer routes than other days.
 - Good Friday (29 Mar 2024) is inside the training period. It is **not** a held-out holiday test.
@@ -58,17 +58,26 @@ The Victoria train-count dataset is a stretch goal only if the core is finished 
 - [x] Decision report reviewed and approved (24 Oct)
 - [x] SUNT licence confirmed on GitHub, Mendeley Data and Hugging Face (CC BY 4.0)
 - [x] Repository skeleton and documentation
-- [x] Data pipeline: download, aggregation, quality report (24 Oct; all 6 checks pass)
-- [x] Unit tests for the pipeline (18 tests, pandas 2.2 and 3.0)
-- [ ] Choose how to treat route-hours with no service (zero or missing) before modelling
-- [ ] Baselines
-- [ ] LightGBM demand model
-- [ ] Estimated-load model and capacity sensitivity
-- [ ] Streamlit app and cloud deployment
-- [ ] Error analysis and results tables
-- [ ] Code freeze
-- [ ] Slides, viva sheet, demo video
-- [ ] Rehearsals
+- [x] Data pipeline: download, aggregation, quality report (all 6 checks pass)
+- [x] Missing-hour policy (D8), malformed trips (D9), capacity (D10), bursts (D11)
+- [x] Baselines, LightGBM, validation tuning and ablation, final blend (D12)
+- [x] Test evaluation, error analysis, crowding sensitivity, bootstrap intervals ([RESULTS.md](../reports/RESULTS.md))
+- [x] Streamlit dashboard (5 pages) with smoke tests; checked in headless Chromium
+- [x] 68 tests; GitHub Actions on Python 3.11 and 3.12
+- [x] Architecture document, viva preparation sheet, slide deck draft (claude.ai artifact, shared by Jay)
+- [ ] **Jay:** deploy on Streamlit Community Cloud (needs his GitHub sign-in); add the URL to the README
+- [ ] **Jay:** share the slide deck with the team; agree the speaking split
+- [ ] **Akshar:** run the full pipeline from a fresh clone (Colab or own laptop) and post the output on GitHub
+- [ ] **Tirth:** read RESULTS.md end to end; check the error-analysis claims against the dashboard
+- [ ] **Disha:** rehearse the 3-minute demo; record the backup demo video
+- [ ] **Shivani:** read DECISIONS.md D8–D12 and VIVA_PREP.md; own the limitations slide
+- [ ] **All:** each member runs `pytest` and the app on their own laptop before 1 Nov
+- [ ] **All:** code freeze at the end of 31 Oct; rehearsals 1–2 Nov
+- [ ] **Team decision:** a licence for our own code (MIT proposed)
+
+### How the work was done
+
+The pipeline, models, dashboard and documents in this repository were built in AI-assisted sessions directed by Jay (commits carry a `Co-Authored-By: Claude` line). Teammates' own reviews, runs and edits should be committed from their own accounts so the history shows each contribution.
 
 ## Open questions for the TA
 

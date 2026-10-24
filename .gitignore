@@ -33,3 +33,6 @@ desktop.ini
 # Large or temporary outputs
 *.log
 tmp/
+
+# Trained model files (regenerate with python -m transit.models.run)
+/models/
