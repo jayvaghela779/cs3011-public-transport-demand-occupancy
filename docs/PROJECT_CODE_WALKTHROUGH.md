@@ -1,5 +1,7 @@
 # Project code walkthrough
 
+> **Status (28 Oct 2026).** A learning companion to [REFERENCE_GUIDE.md](REFERENCE_GUIDE.md), written on 24 Oct 2026 about the **legacy implementation**. Its file and line references still match `3d0440b`: nothing under `src/`, `reports/` or `data/` changed after it was written. Its "reading paths and exercises" describe the legacy code; the responsibilities for the redevelopment are in [SCENARIO3_REDEVELOPMENT_GUIDE.md](SCENARIO3_REDEVELOPMENT_GUIDE.md).
+
 A guided tour of the code, written for the five of us before the evaluation. It follows the data from the raw SUNT files to the dashboard, names the real files and functions at every step, and ends with a reading path and exercises for each member.
 
 The goal is understanding, not a script to memorise. If you can do the exercises for your part without looking at the answers, you can handle follow-up questions in the viva, because you will know *where to look* and *why the code does what it does*.
@@ -28,7 +30,7 @@ git clone https://github.com/jayvaghela779/cs3011-public-transport-demand-occupa
 cd cs3011-public-transport-demand-occupancy
 pip install -r requirements.txt
 pip install -e .          # makes `import transit` work from anywhere
-pytest -q                 # 93 tests, about 15 seconds
+pytest -q                 # 98 tests on 28 Oct 2026, about a minute
 ```
 
 If anything fails on Windows, [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md) has step-by-step setup and troubleshooting.
@@ -526,7 +528,7 @@ Concrete case (route 137 I, Wed 17 Apr, 09:00, forecast estimated load 39.6): ca
 Run these on your own laptop. They take about a minute together and need no download.
 
 ```bash
-pytest -q                               # expect: 93 passed
+pytest -q                               # expect: 98 passed (on commit 3d0440b)
 python -m transit.verify                # expect: all 2326 values match
 streamlit run app/streamlit_app.py      # open each of the 5 pages
 ```
