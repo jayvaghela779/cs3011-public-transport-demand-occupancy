@@ -1,5 +1,7 @@
 # Viva preparation
 
+> **Status (28 Oct 2026): historical.** Written on 24 Oct 2026, in AI-assisted sessions, about the **legacy implementation**. Use it to check your understanding of how the existing system behaves, not as a script to memorise: the team's Scenario 3 rulebook asks every member to answer from their own code and outputs (rulebook, section 13 and Appendix A; [SCENARIO3_REDEVELOPMENT_GUIDE.md](SCENARIO3_REDEVELOPMENT_GUIDE.md)).
+
 Short answers every member should be able to give, with the evidence to point at. Numbers come from [reports/RESULTS.md](../reports/RESULTS.md); check them there before quoting. Harder follow-ups are in [VIVA_QUESTION_BANK.md](VIVA_QUESTION_BANK.md); each speaker's part is in [TEAM_PRESENTATION_GUIDE.md](TEAM_PRESENTATION_GUIDE.md).
 
 ## 1. Framing

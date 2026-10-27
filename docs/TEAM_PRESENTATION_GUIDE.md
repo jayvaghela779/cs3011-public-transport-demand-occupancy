@@ -1,5 +1,7 @@
 # Team presentation guide
 
+> **Status (28 Oct 2026): historical.** Written on 24 Oct 2026 for presenting the **legacy implementation** with its slide deck. The speaking split is provisional and is not a record of who wrote the code. Under the team's Scenario 3 rulebook, each member should explain the component they implement in the new repository from their own code and outputs ([SCENARIO3_REDEVELOPMENT_GUIDE.md](SCENARIO3_REDEVELOPMENT_GUIDE.md)).
+
 One section per speaker: your slides, what to say, the three ideas you must understand, and the questions you should expect.
 
 > **Provisional.** The speaking split comes from the slide deck's speaker notes and its team slide. The team has not confirmed it. Change it to match what each person actually rehearses, and update the deck's team slide to match.

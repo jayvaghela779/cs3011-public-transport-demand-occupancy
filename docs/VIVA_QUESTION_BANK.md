@@ -1,5 +1,7 @@
 # Viva question bank
 
+> **Status (28 Oct 2026): historical.** Written on 24 Oct 2026, in AI-assisted sessions, about the **legacy implementation**. The questions remain useful practice; the answers describe the legacy system and are not a script to memorise. Under the team's Scenario 3 rulebook, answer from your own implementation and its outputs ([SCENARIO3_REDEVELOPMENT_GUIDE.md](SCENARIO3_REDEVELOPMENT_GUIDE.md)).
+
 Harder questions an examiner may ask, with short answers grounded in the code and the committed results. [VIVA_PREP.md](VIVA_PREP.md) has the basic answers; this file goes further and adds the follow-ups.
 
 Every number here comes from [reports/RESULTS.md](../reports/RESULTS.md), [reports/metrics.json](../reports/metrics.json), [docs/DATA.md](DATA.md) or [docs/DECISIONS.md](DECISIONS.md). Check it there before you quote it. Answers are tagged:
@@ -294,7 +296,7 @@ It reads the committed `metrics.json` and prediction files. The Model comparison
 - LightGBM runs with a fixed seed in deterministic mode.
 - On 24 Oct 2026, a full rerun from a fresh clone (Python 3.12) reproduced the route-hour table cell by cell, all 2,326 numbers in `metrics.json`, all 5 prediction files, and byte-identical `RESULTS.md` and `planning.json` (ARCHITECTURE.md, "Reproduction record").
 - `python -m transit.verify` repeats the comparison for anyone.
-- GitHub Actions runs 93 tests and the verify step on Ubuntu (Python 3.11, 3.12) and Windows (Python 3.12, with and without the locked versions).
+- GitHub Actions runs the test suite (98 tests on 28 Oct 2026; 93 when this answer was written) and the verify step on Ubuntu (Python 3.11, 3.12) and Windows (Python 3.12, with and without the locked versions). On CI, verify compares the freshly checked-out files with themselves, so it shows they load and agree, not that they reproduce; reproduction needs the full rerun above.
 
 Limits:
 - The full pipeline has not been rerun on Windows or Colab.
@@ -302,7 +304,7 @@ Limits:
 
 *Follow-up: "Couldn't you have edited metrics.json?"* Anyone can rerun the pipeline in about 11 minutes and verify will list any difference.
 
-**57. What do the 93 tests cover, and what don't they?**
+**57. What do the tests cover (98 on 28 Oct 2026), and what don't they?**
 They cover:
 - aggregation and conservation of boardings (`test_aggregate`);
 - input checks and time windows;
