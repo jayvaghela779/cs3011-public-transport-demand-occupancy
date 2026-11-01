@@ -76,3 +76,5 @@ web/                  public in-browser build (index.html, build_site.py, wheels
 
 The whole sequence took about 11 minutes. The parquet files differ in bytes only in their metadata (which records the pandas version), not in content. Not yet repeated on Windows or Colab.
 
+**27–28 Oct 2026, `main` at `3d0440b`, Linux, 2 CPUs, Python 3.13.17, pandas 3.0.5, LightGBM 4.7.0** (cached raw files, checksums verified, no new download): table, prediction files, `RESULTS.md` and `planning.json` byte-identical; `metrics.json` identical apart from wall-clock times; `transit.verify` reproduced all 2,326 values; `pytest` 98 passed. Full record: [REFERENCE_GUIDE.md §I.6](REFERENCE_GUIDE.md#i6-verification-record-2728-october-2026).
+

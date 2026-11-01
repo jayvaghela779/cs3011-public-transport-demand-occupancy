@@ -1,5 +1,7 @@
 # Project plan
 
+> **Status (28 Oct 2026): historical.** This plan tracked the build of the **legacy implementation** in this repository, up to 24 Oct 2026. It is kept as a record, including its review log, and is not updated for the human-led redevelopment. The current plan is [SCENARIO3_REDEVELOPMENT_GUIDE.md](SCENARIO3_REDEVELOPMENT_GUIDE.md); the technical reference is [REFERENCE_GUIDE.md](REFERENCE_GUIDE.md).
+
 **Registered title:** AI Based Public Transport Demand and Occupancy Prediction
 **Domain:** Machine Learning
 **Group:** 52

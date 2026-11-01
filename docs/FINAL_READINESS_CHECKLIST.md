@@ -1,5 +1,7 @@
 # Final readiness checklist
 
+> **Status (28 Oct 2026): historical.** Written on 24 Oct 2026 for presenting the **legacy implementation** on 3 Nov. It still applies if the team falls back to that implementation. The acceptance gates for the human-led redevelopment are in [SCENARIO3_REDEVELOPMENT_GUIDE.md §11](SCENARIO3_REDEVELOPMENT_GUIDE.md#11-acceptance-gates). Apart from the test count in B1, the items below were not re-checked.
+
 Everything still to do before the evaluation on **Tuesday 3 November 2026, 6:00 PM**. Each action has one owner, what it needs first, the evidence that shows it is done, and who can do it. Dates are suggestions within the plan: code freeze at the end of 31 Oct, rehearsals on 1–2 Nov.
 
 **Who can do it:**
@@ -26,7 +28,7 @@ Each member runs the [runbook §1](DEMO_RUNBOOK.md#1-install-and-check-once-per-
 
 | # | Action | Owner | Prerequisite | Evidence it is done | Who | By |
 | --- | --- | --- | --- | --- | --- | --- |
-| B1 | Run the tests, verify and the dashboard | Jay | Python 3.12, git | Issue comment showing `93 passed` and `Reproduced` | Human | 28 Oct |
+| B1 | Run the tests, verify and the dashboard | Jay | Python 3.12, git | Issue comment showing `98 passed` (the count on `3d0440b`) and `Reproduced` | Human | 28 Oct |
 | B2 | Same | Akshar | Same | Issue comment | Human | 28 Oct |
 | B3 | Same | Tirth | Same | Issue comment | Human | 28 Oct |
 | B4 | Same, on the laptop that will run the demo | Disha | Same | Issue comment | Human | 28 Oct |

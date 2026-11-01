@@ -2,6 +2,8 @@
 
 How to install, check and run the dashboard on a team laptop, the 3-minute demo, and what to do when something breaks.
 
+> **Scope (28 Oct 2026).** This runbook is for the **legacy dashboard in this repository**, which stays the working fallback during the human-led redevelopment ([SCENARIO3_REDEVELOPMENT_GUIDE.md](SCENARIO3_REDEVELOPMENT_GUIDE.md)). The new repository needs its own runbook. Section 1 and the demo table were re-checked against the app on 27–28 Oct 2026 ([REFERENCE_GUIDE §I.6](REFERENCE_GUIDE.md#i6-verification-record-2728-october-2026)).
+
 **Status on 24 Oct 2026.**
 - The dashboard runs locally (the main plan for the demo).
 - It is also public on GitHub Pages: **https://jayvaghela779.github.io/cs3011-public-transport-demand-occupancy/** (section 5). It runs in the visitor's browser and was checked on all five pages that day.
@@ -44,11 +46,11 @@ python -m streamlit run app/streamlit_app.py
 
 | Command | Expected result |
 | --- | --- |
-| `python -m pytest -q` | `93 passed` (the count grows if tests are added; nothing should fail) |
+| `python -m pytest -q` | `98 passed` on commit `3d0440b` (28 Oct 2026; the count grows if tests are added; nothing should fail) |
 | `python -m transit.verify` | `data/processed/route_hour.parquet: all 541,611 rows x 12 columns match.` then `Reproduced: all 2326 values match ...` |
 | `python -m streamlit run app/streamlit_app.py` | A browser tab opens at http://localhost:8501 with the title "AI Based Public Transport Demand and Occupancy Prediction" in the sidebar, above five pages drawn as stops on a route line |
 
-On a fresh clone, verify only confirms that your copy of the results equals the committed one. To check that the results really come from the code, rerun the whole pipeline (optional, about 11 minutes plus a 510 MB download):
+On a fresh clone, verify only confirms that your copy of the results equals the committed one. To check that the results really come from the code, rerun the whole pipeline (optional, 11–13 minutes on 2 CPUs plus a 510 MB download):
 
 ```bash
 python -m transit.data.download
@@ -72,7 +74,7 @@ If a future package release ever changes the results, install the exact versions
 | 0:00–0:45 | **Forecast explorer**. Period "Test, 15–28 Apr 2024" (default). Route "137 · I" (default, busiest first). Service day: choose **Wed 17 Apr 2024** (the default is Mon 15 Apr). | Three numbers: boardings that day **8,760**, final forecast WAPE this day **15.3%**, last-week WAPE this day **7.7%**. The hourly boardings chart with a shaded 80% band. The estimated-load chart with dashed lines at 35 and 56 (50% and 80% of 70). A crowding strip, actual against forecast. | "Dark line: actual. Teal: our forecast. Dotted amber: last week's rule. Shaded: the 80% interval. On this day last week was closer; across all test days we are about 23% better." |
 | 0:45–1:15 | Move **Capacity assumption for crowding lines** from `Ônibus básico (70)` to `Midiônibus (40)`, then back. | The dashed lines move to 20 and 32; the strip shows more red (H, high) and yellow (M, medium) hours. The forecast line does not change. | "Crowding depends on the assumed bus size, so we report four sizes." |
 | 1:15–2:00 | **Model comparison**. Open **"Check: recompute the test metrics from the committed prediction files"**. | Two tables (demand, estimated load). In the check, every row shows `Match` ticked (10 rows). Below: WAPE by time of day and by test day. | "These are the evaluated numbers; the app recomputes them from the saved predictions and they all match. The historical average is almost as good as our blend, which we report openly." |
-| 2:00–2:40 | **Next-day forecast**. | A yellow warning that it is a demonstration. **Route-hours forecast 9,566**, **Forecast high crowding 481** (at 70). A list of the most crowded hours. Caption: 92.1% top-50 precision on test, historical average 91.4%, last-week rule 78.6%. | "A genuine forecast for 29 April, the day after our data. No actuals exist, so it is not an evaluated result." |
+| 2:00–2:40 | **Next-day forecast**. | A red-edged note: "Demonstration, not an evaluated result." Three figures: **Route-hours forecast 9,566**, **Forecast high crowding 481** (at 70), and **Top-50 alerts truly high, test weeks 92.1%** (historical average 91.4%, last week 78.6%). A list of the most crowded hours. | "A genuine forecast for 29 April, the day after our data. No actuals exist, so it is not an evaluated result." |
 | 2:40–3:00 | Back to **Forecast explorer**. Route **1637 · V**, day **Mon 15 Apr 2024**. | An open grey circle at 05:00. | "An open circle is an hour this route normally runs but has no record that day. We treat it as missing, never as zero, and never score it." |
 
 If time is short, skip the last step and say the open-circle sentence while on the first page.
